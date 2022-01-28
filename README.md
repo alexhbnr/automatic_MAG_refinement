@@ -1,8 +1,8 @@
 Automatic revision of MAGs to remove likely chimeric contigs
 ================
 
-  - [Background](#background)
-  - [References](#references)
+-   [Background](#background)
+-   [References](#references)
 
 ## Background
 
@@ -53,7 +53,7 @@ How to proceed with MAGs that were either assigned to high or medium
 quality using checkM but returned a higher than expected GUNC score is
 yet unclear. In the presence of a large number of additional genomes
 from the same habitat some researchers tended to discard these MAGs as
-chimeric (e.g. Saheb Kashaf et al. (2021)). However, for samples that
+chimeric (e.g. Saheb Kashaf et al. (2021)). However, for samples that
 are limited in quantity and underlie strong ethical considerations, such
 as ancient DNA samples, this is not an adequate solution. Suggestions
 have been put forward to manually curate the contigs of chimeric MAGs
@@ -68,20 +68,19 @@ steps that can be manually done in anvi’o. In brief, the pipeline
 written in Snakemake (Mölder et al. 2021) expects MAGs refined by
 MetaWRAP (Uritskiy, DiRuggiero, and Taylor 2018) as input and identifies
 contigs that are likely chimeric by inferring the majority lineage
-across all contigs using MMSeqs2
-(<span class="citeproc-not-found" data-reference-id="Steinegger2018">**???**</span>)
-against the GTDB reference database (Parks et al. 2020) using the
-command `mmseqs taxonomy` and discard contigs that diverge either by
-average sequencing depth or lineage assignment. For the revised contigs,
-a standard set of assembly information including an updated estimate for
+across all contigs using MMSeqs2 (Steinegger and Söding 2017) against
+the GTDB reference database (Parks et al. 2020) using the command
+`mmseqs taxonomy` and discard contigs that diverge either by average
+sequencing depth or lineage assignment. For the revised contigs, a
+standard set of assembly information including an updated estimate for
 the genome completeness and the contamination is determined and
 reported.
 
 ## References
 
-<div id="refs" class="references">
+<div id="refs" class="references csl-bib-body hanging-indent">
 
-<div id="ref-Alneberg2013">
+<div id="ref-Alneberg2013" class="csl-entry">
 
 Alneberg, Johannes, Brynjar Smári Bjarnason, Ino de Bruijn, Melanie
 Schirmer, Joshua Quick, Umer Z Ijaz, Nicholas J Loman, Anders F
@@ -90,17 +89,17 @@ Coverage and Composition.” *arXiv Preprint arXiv:1312.4038*.
 
 </div>
 
-<div id="ref-Bowers2017">
+<div id="ref-Bowers2017" class="csl-entry">
 
 Bowers, Robert M, Nikos C Kyrpides, Ramunas Stepanauskas, Miranda
 Harmon-Smith, Devin Doud, TBK Reddy, Frederik Schulz, et al. 2017.
-“Minimum Information About a Single Amplified Genome (Misag) and a
-Metagenome-Assembled Genome (Mimag) of Bacteria and Archaea.” *Nature
+“Minimum Information about a Single Amplified Genome (MISAG) and a
+Metagenome-Assembled Genome (MIMAG) of Bacteria and Archaea.” *Nature
 Biotechnology* 35 (8): 725–31.
 
 </div>
 
-<div id="ref-Chen2020">
+<div id="ref-Chen2020" class="csl-entry">
 
 Chen, Lin-Xing, Karthik Anantharaman, Alon Shaiber, A Murat Eren, and
 Jillian F Banfield. 2020. “Accurate and Complete Genomes from
@@ -108,7 +107,7 @@ Metagenomes.” *Genome Research* 30 (3): 315–33.
 
 </div>
 
-<div id="ref-Eren2015">
+<div id="ref-Eren2015" class="csl-entry">
 
 Eren, A Murat, Özcan C Esen, Christopher Quince, Joseph H Vineis, Hilary
 G Morrison, Mitchell L Sogin, and Tom O Delmont. 2015. “Anvi’o: An
@@ -117,7 +116,7 @@ Advanced Analysis and Visualization Platform for ‘Omics Data.” *PeerJ*
 
 </div>
 
-<div id="ref-Kang2019">
+<div id="ref-Kang2019" class="csl-entry">
 
 Kang, Dongwan D, Feng Li, Edward Kirton, Ashleigh Thomas, Rob Egan, Hong
 An, and Zhong Wang. 2019. “MetaBAT 2: An Adaptive Binning Algorithm for
@@ -126,7 +125,7 @@ Robust and Efficient Genome Reconstruction from Metagenome Assemblies.”
 
 </div>
 
-<div id="ref-Molder2021">
+<div id="ref-Molder2021" class="csl-entry">
 
 Mölder, Felix, Kim Philipp Jablonski, Brice Letcher, Michael B Hall,
 Christopher H Tomkins-Tinch, Vanessa Sochat, Jan Forster, et al. 2021.
@@ -134,7 +133,7 @@ Christopher H Tomkins-Tinch, Vanessa Sochat, Jan Forster, et al. 2021.
 
 </div>
 
-<div id="ref-Orakov2021">
+<div id="ref-Orakov2021" class="csl-entry">
 
 Orakov, Askarbek, Anthony Fullam, Luis Pedro Coelho, Supriya Khedkar,
 Damian Szklarczyk, Daniel R Mende, Thomas SB Schmidt, and Peer Bork.
@@ -143,7 +142,7 @@ Genomes.” *Genome Biology* 22 (1): 1–19.
 
 </div>
 
-<div id="ref-Parks2020">
+<div id="ref-Parks2020" class="csl-entry">
 
 Parks, Donovan H, Maria Chuvochina, Pierre-Alain Chaumeil, Christian
 Rinke, Aaron J Mussig, and Philip Hugenholtz. 2020. “A Complete
@@ -152,7 +151,7 @@ Biotechnology* 38 (9): 1079–86.
 
 </div>
 
-<div id="ref-Parks2015">
+<div id="ref-Parks2015" class="csl-entry">
 
 Parks, Donovan H, Michael Imelfort, Connor T Skennerton, Philip
 Hugenholtz, and Gene W Tyson. 2015. “CheckM: Assessing the Quality of
@@ -161,17 +160,17 @@ Metagenomes.” *Genome Research* 25 (7): 1043–55.
 
 </div>
 
-<div id="ref-Saheb2021">
+<div id="ref-Saheb2021" class="csl-entry">
 
 Saheb Kashaf, Sara, Diana M Proctor, Clay Deming, Paul Saary, Martin
-Hölzer, Monica E Taylor, Heidi H Kong, Julia A Segre, Alexandre
-Almeida, and Robert D Finn. 2021. “Integrating Cultivation and
-Metagenomics for a Multi-Kingdom View of Skin Microbiome Diversity and
-Functions.” *Nature Microbiology*, 1–11.
+Hölzer, Monica E Taylor, Heidi H Kong, Julia A Segre, Alexandre Almeida,
+and Robert D Finn. 2021. “Integrating Cultivation and Metagenomics for a
+Multi-Kingdom View of Skin Microbiome Diversity and Functions.” *Nature
+Microbiology*, 1–11.
 
 </div>
 
-<div id="ref-Sieber2018">
+<div id="ref-Sieber2018" class="csl-entry">
 
 Sieber, Christian MK, Alexander J Probst, Allison Sharrar, Brian C
 Thomas, Matthias Hess, Susannah G Tringe, and Jillian F Banfield. 2018.
@@ -180,7 +179,15 @@ and Scoring Strategy.” *Nature Microbiology* 3 (7): 836–43.
 
 </div>
 
-<div id="ref-Uritskiy2018">
+<div id="ref-Steinegger2017" class="csl-entry">
+
+Steinegger, Martin, and Johannes Söding. 2017. “MMseqs2 Enables
+Sensitive Protein Sequence Searching for the Analysis of Massive Data
+Sets.” *Nature Biotechnology* 35 (11): 1026–28.
+
+</div>
+
+<div id="ref-Uritskiy2018" class="csl-entry">
 
 Uritskiy, Gherman V, Jocelyne DiRuggiero, and James Taylor. 2018.
 “MetaWRAP—a Flexible Pipeline for Genome-Resolved Metagenomic Data
@@ -188,7 +195,7 @@ Analysis.” *Microbiome* 6 (1): 1–13.
 
 </div>
 
-<div id="ref-Wu2016">
+<div id="ref-Wu2016" class="csl-entry">
 
 Wu, Yu-Wei, Blake A Simmons, and Steven W Singer. 2016. “MaxBin 2.0: An
 Automated Binning Algorithm to Recover Genomes from Multiple Metagenomic
@@ -196,12 +203,12 @@ Datasets.” *Bioinformatics* 32 (4): 605–7.
 
 </div>
 
-<div id="ref-Yue2020">
+<div id="ref-Yue2020" class="csl-entry">
 
 Yue, Yi, Hao Huang, Zhao Qi, Hui-Min Dou, Xin-Yi Liu, Tian-Fei Han, Yue
 Chen, Xiang-Jun Song, You-Hua Zhang, and Jian Tu. 2020. “Evaluating
 Metagenomics Tools for Genome Binning with Real Metagenomic Datasets and
-Cami Datasets.” *BMC Bioinformatics* 21 (1): 1–15.
+CAMI Datasets.” *BMC Bioinformatics* 21 (1): 1–15.
 
 </div>
 
