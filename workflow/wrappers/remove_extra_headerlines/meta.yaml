@@ -1,0 +1,4 @@
+name: "remove_extra_headerlines"
+description: Remove all contigs that do not occur in BAM file for faster iteration.
+authors:
+  - Alexander Hübner

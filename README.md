@@ -4,7 +4,7 @@ Automatic revision of MAGs to remove likely chimeric contigs
   - [Background](#background)
   - [References](#references)
 
-# Background
+## Background
 
 The *de-novo* assembly of short-read metagenomic sequencing data has
 become the *de-facto* standard when studying the microbiome of complex
@@ -77,7 +77,7 @@ a standard set of assembly information including an updated estimate for
 the genome completeness and the contamination is determined and
 reported.
 
-# References
+## References
 
 <div id="refs" class="references">
 

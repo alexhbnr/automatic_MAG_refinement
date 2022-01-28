@@ -1,0 +1,4 @@
+name: "bedfile_contigs_from_bin"
+description: Generates BED file for the contigs belonging to a specific MAG refined by MetaWRAP.
+authors:
+  - Alexander Hübner
