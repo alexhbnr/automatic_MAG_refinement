@@ -1,0 +1,7 @@
+name: MMSeqs2_GTDB
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - mmseqs2
