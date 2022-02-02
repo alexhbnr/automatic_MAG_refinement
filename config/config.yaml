@@ -1,0 +1,4 @@
+sampletsv: "samples.tsv"
+resourcesdir: "resources"
+resultdir: "results"
+tmpdir: "workflow/tmp"
