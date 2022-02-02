@@ -1,0 +1,4 @@
+name: "prokka_mag"
+description: Annotate genes of a MAG.
+authors:
+  - Alexander Hübner

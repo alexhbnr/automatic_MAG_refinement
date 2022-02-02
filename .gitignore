@@ -1,3 +1,10 @@
+.snakemake
+conda
+resources
+results
+workflow/.snakemake
+workflow/tmp
 README.Rmd
 README.html
 references.bib
+phylophlan_metagenomic.txt
