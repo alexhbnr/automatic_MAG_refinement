@@ -1,0 +1,4 @@
+name: "gunc_run"
+description: Run GUNC on the set of FastA files of MAGs.
+authors:
+  - Alexander Hübner

@@ -1,0 +1,4 @@
+name: "gunc_merge"
+description: Run GUNC merge to join the checkM and GUNC reports.
+authors:
+  - Alexander Hübner
