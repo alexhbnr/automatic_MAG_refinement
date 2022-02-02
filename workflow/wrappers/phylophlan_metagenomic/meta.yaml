@@ -1,0 +1,4 @@
+name: "phylophlan_metagenomic"
+description: Infer the ten nearest genomes of all MAGs in the dataset.
+authors:
+  - Alexander Hübner
