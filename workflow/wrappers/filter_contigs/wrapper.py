@@ -60,6 +60,7 @@ cofgs_cov_avg = contigs_on_path.loc[contigs_on_path['cofgs']]['Depth median'].me
 cofgs_cov_std = contigs_on_path.loc[contigs_on_path['cofgs']]['Depth median'].std()
 contigs_on_path['depth_filter'] = (contigs_on_path.loc[~contigs_on_path['cofgs']]['Depth median'] - cofgs_cov_avg).abs() < (2 * cofgs_cov_std)
 contigs_on_path['depth_filter'] = contigs_on_path['depth_filter'].fillna(value=True)
+contigs_on_path = contigs_on_path.drop(['Contig'], axis=1)
 
 # Generate final list of contigs
 contigs = set(contigs_on_path.loc[contigs_on_path['depth_filter'],
