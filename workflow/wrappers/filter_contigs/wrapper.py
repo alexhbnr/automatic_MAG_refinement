@@ -31,8 +31,8 @@ prokka_contig_names = [name for name, _ in pyfastx.Fasta(f"{snakemake.params.pro
                                                          build_index=False)]
 contig_name_map = {p: o for o, p in zip(original_contig_names, prokka_contig_names)}
 # Read MMSeqs2 results on gene level
-if os.stat(snakemake.input.genes_mmseqs2).st_size > 0:
-    mmseqs2_genes = pd.read_csv(snakemake.input.genes_mmseqs2, sep="\t")
+if os.stat(snakemake.params.genes_mmseqs2).st_size > 0:
+    mmseqs2_genes = pd.read_csv(snakemake.params.genes_mmseqs2, sep="\t")
     mmseqs2_genes = mmseqs2_genes.loc[~mmseqs2_genes['lineage'].isnull()]
 
 # Filter contigs
@@ -40,7 +40,7 @@ if os.stat(snakemake.input.genes_mmseqs2).st_size > 0:
 contigs_on_path = mmseqs2.loc[((mmseqs2['lineage'].isin(taxpaths)) |
                                (mmseqs2['lineage'].str.contains(taxpaths[-1])))]
 ## 2. Remove contigs with genes from different organisms - chimeric contigs
-if os.stat(snakemake.input.genes_mmseqs2).st_size > 0:
+if os.stat(snakemake.params.genes_mmseqs2).st_size > 0:
     gff['contig'] = gff['attribute'].str.split(";").str[0].str.replace("ID=", "")
     mmseqs2_genes = mmseqs2_genes.merge(gff[['seqname', 'contig']], how="left", on="contig")
     mmseqs2_genes['consensus_lineage'] = mmseqs2_genes['lineage'].isin(taxpaths)

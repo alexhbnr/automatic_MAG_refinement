@@ -6,6 +6,16 @@ wildcard_constraints:
 
 #### Auxilliary functions ######################################################
 
+def return_bin_fas(wildcards):
+    bins = []
+    for sample in SAMPLES:
+        metawrap = pd.read_csv(sampletsv.at[sample, 'metawrapreport'],
+                            sep="\t")
+        metawrap['binid'] = metawrap['bin'].str.extract(r'bin.([0-9]+)$').astype(int)
+        metawrap['sample_binID'] = [f"{sample}_{i:03}" for i in metawrap['binid']]
+        bins.extend(metawrap['sample_binID'].tolist())
+    return [f"{config['tmpdir']}/mmseqs2_genes/{b}-contigs_superkingdom_phylum.fa.gz" for b in bins]
+
 def path_to_bin_fa(wildcards):
     binid = f"bin.{int(wildcards.bin.split('_')[1])}"
     metawrap_path = sampletsv.at[wildcards.bin.split('_')[0], 'metawrapreport'] \
@@ -62,66 +72,91 @@ rule identify_kingdom_phylum_contigs:
     script:
         "../scripts/identify_kingdom_phylum_contigs.py"
 
+rule concat_bins_kp_contigs:
+    input:
+        lambda wildcards: return_bin_fas(wildcards)
+    output:
+        temp("{tmpdir}/mmseqs2_genes/kp_contigs.fasta")
+    message: "Concatenate all contigs that were assigned to ranks kingdom and phylum into a single FastA"
+    resources:
+        mem = 4,
+        cores = 1
+    params:
+        type = "genes",
+        fas = lambda wildcards: return_bin_fas(wildcards)
+    wrapper:
+        "file:workflow/wrappers/concat_bins"
+
 rule createdb_bins_kp_contigs:
     input:
-        "{tmpdir}/mmseqs2_genes/{bin}-contigs_superkingdom_phylum.fa.gz"
+        "{tmpdir}/mmseqs2_genes/kp_contigs.fasta"
     output:
-        "{tmpdir}/mmseqs2_genes/{bin}.mmseqs2_genes"
-    message: "Create database of genes of bin {wildcards.bin}"
+        "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_genes"
+    message: "Create database of genes on contigs that were assigned to ranks kingdom and phylum"
     resources:
         mem = 16,
         cores = 1
-    params:
-        fa = "{tmpdir}/mmseqs2_genes/{bin}-contigs_superkingdom_phylum.fa.gz"
     wrapper:
         "file:workflow/wrappers/mmseqs2_createdb"
 
 rule screen_kp_contigs:
     input:
         db = f"{config['resourcesdir']}/mmseqs2/gtdb/mmseqs2_gtdb_mapping",
-        contigs = "{tmpdir}/mmseqs2_genes/{bin}.mmseqs2_genes"
+        contigs = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_genes"
     output:
-        "{tmpdir}/mmseqs2_genes/{bin}.mmseqs2_gtdb_genes.index"
-    message: "Assign taxonomy via the GTDB for genes of bin: {wildcards.bin}"
+        "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.index"
+    message: "Assign taxonomy via the GTDB for genes on contigs that were assigned to ranks kingdom and phylum"
     resources:
         mem = 500,
         cores = 24
     params:
         tmpdir = "{tmpdir}/mmseqs2_tmpdir",
-        prefix = "{tmpdir}/mmseqs2_genes/{bin}.mmseqs2_gtdb_genes",
+        prefix = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes",
         gtdb_db = f"{config['resourcesdir']}/mmseqs2/gtdb/mmseqs2_gtdb"
-    threads: 24
+    threads: 36
     wrapper:
         "file:workflow/wrappers/mmseqs2_taxonomy"
 
 rule create_tsv_kp_contigs:
     input:
-        contigs = "{tmpdir}/mmseqs2_genes/{bin}.mmseqs2_genes",
-        assignments = "{tmpdir}/mmseqs2_genes/{bin}.mmseqs2_gtdb_genes.index"
+        contigs = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_genes",
+        assignments = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.index"
     output:
-        pipe("{tmpdir}/mmseqs2_genes/{bin}.mmseqs2_gtdb_genes.tsv")
-    message: "Convert MMSeqs2 GTDB results to TSV: {wildcards.bin}"
+        pipe("{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.tsv")
+    message: "Convert MMSeqs2 GTDB results to TSV"
     resources:
         mem = 8,
         cores = 1
     params:
-        prefix = "{tmpdir}/mmseqs2_genes/{bin}.mmseqs2_gtdb_genes",
+        prefix = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes",
     wrapper:
         "file:workflow/wrappers/mmseqs2_createtsv"
 
 rule annotate_tsv_kp_contigs:
     input:
-        "{tmpdir}/mmseqs2_genes/{bin}.mmseqs2_gtdb_genes.tsv"
+        "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.tsv"
     output:
-        "{tmpdir}/mmseqs2_genes/{bin}.mmseqs2_gtdb_genes.annot.tsv"
-    message: "Add header to MMSeqs2 table: {wildcards.bin}"
+        "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.annot.tsv"
+    message: "Add header to MMSeqs2 table"
     wrapper:
         "file:workflow/wrappers/mmseqs2_annotatetsv"
+
+rule mmseqs2_splittsv_genes:
+    input:
+        "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.annot.tsv"
+    output:
+        touch("{tmpdir}/mmseqs2_genes/mmseqs2_splittsv.done")
+    message: "Split MMSeqs2 result table into bins"
+    params:
+        sampletsv = config['sampletsv'],
+        dir = "{tmpdir}/mmseqs2_genes"
+    wrapper:
+        "file:workflow/wrappers/mmseqs2_splittsv_genes"
 
 rule filter_contigs:
     input:
         contigs_mmseqs2 = lambda wildcards: f"{config['tmpdir']}/mmseqs2/{wildcards.bin}.mmseqs2_gtdb.annot.tsv",
-        genes_mmseqs2 = lambda wildcards: f"{config['tmpdir']}/mmseqs2_genes/{wildcards.bin}.mmseqs2_gtdb_genes.annot.tsv",
+        genes_mmseqs2 = lambda wildcards: f"{config['tmpdir']}/mmseqs2_genes/mmseqs2_splittsv.done",
         depth = lambda wildcards: f"{config['tmpdir']}/depth/{wildcards.bin}.breadth_depth.txt"
     output:
         fa = "{resultdir}/{sample}/bins/{bin}.fasta.gz",
@@ -129,6 +164,7 @@ rule filter_contigs:
     message: "Automatically filter contigs that have a high chance to not belong to major lineage: {wildcards.bin} for sample {wildcards.sample}"
     params:
         fa = lambda wildcards: path_to_bin_fa(wildcards),
+        genes_mmseqs2 = lambda wildcards: f"{config['tmpdir']}/mmseqs2_genes/{wildcards.bin}.mmseqs2_gtdb.annot.tsv",
         prokkadir = lambda wildcards: f"{config['tmpdir']}/prokka"
     wrapper:
         "file:workflow/wrappers/filter_contigs"

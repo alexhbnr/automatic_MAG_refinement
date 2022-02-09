@@ -42,7 +42,8 @@ rule concat_bins:
         mem = 4,
         cores = 1
     params:
-        fas = lambda wildcards: return_bin_fas(wildcards)
+        fas = lambda wildcards: return_bin_fas(wildcards),
+        type = "contigs"
     wrapper:
         "file:workflow/wrappers/concat_bins"
 
