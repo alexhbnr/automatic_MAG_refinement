@@ -6,7 +6,7 @@ wildcard_constraints:
 
 #### Auxilliary functions ######################################################
 
-def return_bin_fas(wildcards):
+def return_genes_fas(wildcards):
     bins = []
     for sample in SAMPLES:
         metawrap = pd.read_csv(sampletsv.at[sample, 'metawrapreport'],
@@ -57,7 +57,7 @@ rule prokka_mag:
 
 rule identify_kingdom_phylum_contigs:
     input:
-        tsv = "{tmpdir}/mmseqs2/{bin}.mmseqs2_gtdb.annot.tsv",
+        mmseqs2 = "{tmpdir}/mmseqs2_gtdb_contigs.done",
         prokka = "{tmpdir}/prokka/{bin}.gff"
     output:
         fa = "{tmpdir}/mmseqs2_genes/{bin}-contigs_superkingdom_phylum.fa.gz",
@@ -68,13 +68,14 @@ rule identify_kingdom_phylum_contigs:
         cores = 1
     params:
         fa = lambda wildcards: path_to_bin_fa(wildcards),
-        prokkadir = "{tmpdir}/prokka"
+        prokkadir = "{tmpdir}/prokka",
+        tsv = "{tmpdir}/mmseqs2/{bin}.mmseqs2_gtdb.annot.tsv",
     script:
         "../scripts/identify_kingdom_phylum_contigs.py"
 
 rule concat_bins_kp_contigs:
     input:
-        lambda wildcards: return_bin_fas(wildcards)
+        fas = lambda wildcards: return_genes_fas(wildcards)
     output:
         temp("{tmpdir}/mmseqs2_genes/kp_contigs.fasta")
     message: "Concatenate all contigs that were assigned to ranks kingdom and phylum into a single FastA"
@@ -83,7 +84,7 @@ rule concat_bins_kp_contigs:
         cores = 1
     params:
         type = "genes",
-        fas = lambda wildcards: return_bin_fas(wildcards)
+        fas = lambda wildcards: return_genes_fas(wildcards)
     wrapper:
         "file:workflow/wrappers/concat_bins"
 
@@ -155,7 +156,6 @@ rule mmseqs2_splittsv_genes:
 
 rule filter_contigs:
     input:
-        contigs_mmseqs2 = lambda wildcards: f"{config['tmpdir']}/mmseqs2/{wildcards.bin}.mmseqs2_gtdb.annot.tsv",
         genes_mmseqs2 = lambda wildcards: f"{config['tmpdir']}/mmseqs2_genes/mmseqs2_splittsv.done",
         depth = lambda wildcards: f"{config['tmpdir']}/depth/{wildcards.bin}.breadth_depth.txt"
     output:
@@ -164,6 +164,7 @@ rule filter_contigs:
     message: "Automatically filter contigs that have a high chance to not belong to major lineage: {wildcards.bin} for sample {wildcards.sample}"
     params:
         fa = lambda wildcards: path_to_bin_fa(wildcards),
+        contigs_mmseqs2 = lambda wildcards: f"{config['tmpdir']}/mmseqs2/{wildcards.bin}.mmseqs2_gtdb.annot.tsv",
         genes_mmseqs2 = lambda wildcards: f"{config['tmpdir']}/mmseqs2_genes/{wildcards.bin}.mmseqs2_gtdb.annot.tsv",
         prokkadir = lambda wildcards: f"{config['tmpdir']}/prokka"
     wrapper:

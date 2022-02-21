@@ -10,7 +10,7 @@ import pyfastx
 # Read coverage
 coverage = pd.read_csv(snakemake.input.depth, sep="\t")
 # Read MMSeqs2 GTDB assignments on contig level
-mmseqs2 = pd.read_csv(snakemake.input.contigs_mmseqs2, sep="\t")
+mmseqs2 = pd.read_csv(snakemake.params.contigs_mmseqs2, sep="\t")
 mmseqs2 = mmseqs2.loc[~mmseqs2['lineage'].isnull()]
 
 # Identify most common taxunit and infer path to root

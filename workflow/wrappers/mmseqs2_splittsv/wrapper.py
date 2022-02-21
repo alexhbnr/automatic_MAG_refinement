@@ -12,6 +12,7 @@ mmseqs2['contig'] = mmseqs2['contig'].str.split(":").str[1]
 
 # Import sample TSV
 sampletsv = pd.read_csv(snakemake.params.sampletsv, sep="\t", index_col=[0])
+sampletsv.index = sampletsv.index.astype(str)
 
 for sample in mmseqs2['sample'].unique():
     # Load overview list of bins
@@ -23,7 +24,6 @@ for sample in mmseqs2['sample'].unique():
     contigs = pd.read_csv(sampletsv.at[sample, 'metawrapreport'].replace(".stats", ".contigs"),
                           sep="\t", header=None, names=['contig', 'bin'], index_col=['bin'])
     for b in sample_bins.index:
-        print(b)
         c = contigs.loc[sample_bins.at[b, 'bin']]['contig'].tolist()
         mmseqs2.loc[(mmseqs2['sample'] == sample) & (mmseqs2['contig'].isin(c))] \
             .drop(['sample'], axis=1) \

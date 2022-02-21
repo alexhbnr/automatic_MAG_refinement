@@ -18,7 +18,7 @@ prokka_contig_names = [name for name, _ in pyfastx.Fasta(f"{snakemake.params.pro
 contig_name_map = {o: p for o, p in zip(original_contig_names, prokka_contig_names)}
 
 # Read MMSeqs2 results
-mmseqs2 = pd.read_csv(snakemake.input[0], sep="\t")
+mmseqs2 = pd.read_csv(snakemake.params.tsv, sep="\t")
 mmseqs2 = mmseqs2.loc[~mmseqs2['lineage'].isnull()]
 
 # Identify most common taxunit and infer path to root
