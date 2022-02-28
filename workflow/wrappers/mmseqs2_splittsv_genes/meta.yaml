@@ -1,0 +1,4 @@
+name: "mmseqs2_splittsv_genes"
+description: Split the MMSeqs2 results TSV into individual ones per bin.
+authors:
+  - Alexander Hübner

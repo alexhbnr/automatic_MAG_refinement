@@ -11,6 +11,7 @@ os.makedirs("snakemake_tmp", exist_ok=True)
 
 #### Parse sample table ########################################################
 sampletsv = pd.read_csv(config['sampletsv'], sep="\t", index_col=[0])
+sampletsv.index = sampletsv.index.astype(str)
 SAMPLES = sampletsv.index.tolist()
 ################################################################################
 

@@ -11,7 +11,10 @@ bamfile = pysam.AlignmentFile(snakemake.input.bam)
 header = bamfile.header
 
 # Generate subset of SQ tags from contig list
-extract_sn_ln = re.compile(r'(k[0-9]+_[0-9]+):1-([0-9]+)')
+if snakemake.params.assembler == "megahit":
+    extract_sn_ln = re.compile(r'(k[0-9]+_[0-9]+):1-([0-9]+)')
+elif snakemake.params.assembler == "metaspades":
+    extract_sn_ln = re.compile(r'(NODE_[0-9]+_length_[0-9]+_cov_[0-9]+.*[0-9*]):1-([0-9]+)')
 with open(snakemake.input.contiglist, "rt") as contigfile:
     sq_info = [extract_sn_ln.search(line.rstrip()).groups()
                for line in contigfile]

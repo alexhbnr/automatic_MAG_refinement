@@ -10,7 +10,7 @@ import pyfastx
 # Read coverage
 coverage = pd.read_csv(snakemake.input.depth, sep="\t")
 # Read MMSeqs2 GTDB assignments on contig level
-mmseqs2 = pd.read_csv(snakemake.input.contigs_mmseqs2, sep="\t")
+mmseqs2 = pd.read_csv(snakemake.params.contigs_mmseqs2, sep="\t")
 mmseqs2 = mmseqs2.loc[~mmseqs2['lineage'].isnull()]
 
 # Identify most common taxunit and infer path to root
@@ -31,8 +31,8 @@ prokka_contig_names = [name for name, _ in pyfastx.Fasta(f"{snakemake.params.pro
                                                          build_index=False)]
 contig_name_map = {p: o for o, p in zip(original_contig_names, prokka_contig_names)}
 # Read MMSeqs2 results on gene level
-if os.stat(snakemake.input.genes_mmseqs2).st_size > 0:
-    mmseqs2_genes = pd.read_csv(snakemake.input.genes_mmseqs2, sep="\t")
+if os.stat(snakemake.params.genes_mmseqs2).st_size > 0:
+    mmseqs2_genes = pd.read_csv(snakemake.params.genes_mmseqs2, sep="\t")
     mmseqs2_genes = mmseqs2_genes.loc[~mmseqs2_genes['lineage'].isnull()]
 
 # Filter contigs
@@ -40,7 +40,7 @@ if os.stat(snakemake.input.genes_mmseqs2).st_size > 0:
 contigs_on_path = mmseqs2.loc[((mmseqs2['lineage'].isin(taxpaths)) |
                                (mmseqs2['lineage'].str.contains(taxpaths[-1])))]
 ## 2. Remove contigs with genes from different organisms - chimeric contigs
-if os.stat(snakemake.input.genes_mmseqs2).st_size > 0:
+if os.stat(snakemake.params.genes_mmseqs2).st_size > 0:
     gff['contig'] = gff['attribute'].str.split(";").str[0].str.replace("ID=", "")
     mmseqs2_genes = mmseqs2_genes.merge(gff[['seqname', 'contig']], how="left", on="contig")
     mmseqs2_genes['consensus_lineage'] = mmseqs2_genes['lineage'].isin(taxpaths)
@@ -60,6 +60,7 @@ cofgs_cov_avg = contigs_on_path.loc[contigs_on_path['cofgs']]['Depth median'].me
 cofgs_cov_std = contigs_on_path.loc[contigs_on_path['cofgs']]['Depth median'].std()
 contigs_on_path['depth_filter'] = (contigs_on_path.loc[~contigs_on_path['cofgs']]['Depth median'] - cofgs_cov_avg).abs() < (2 * cofgs_cov_std)
 contigs_on_path['depth_filter'] = contigs_on_path['depth_filter'].fillna(value=True)
+contigs_on_path = contigs_on_path.drop(['Contig'], axis=1)
 
 # Generate final list of contigs
 contigs = set(contigs_on_path.loc[contigs_on_path['depth_filter'],
