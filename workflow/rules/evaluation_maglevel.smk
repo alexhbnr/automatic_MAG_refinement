@@ -69,7 +69,8 @@ rule remove_extra_headerlines_filtered_contigs:
         mem = 4,
         cores = 1
     params:
-        fasta = lambda wildcards: sampletsv.at[wildcards.bin.split("_")[0], 'fastafn']
+        fasta = lambda wildcards: sampletsv.at[wildcards.bin.split("_")[0], 'fastafn'],
+        assembler = config['assembler']
     wrapper:
         "file:workflow/wrappers/remove_extra_headerlines"
 
