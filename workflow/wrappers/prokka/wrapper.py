@@ -17,7 +17,7 @@ with open(snakemake.params.fa, "rb") as f:
         fafilename = snakemake.params.fa
 
 shell(
-    "(prokka_notbl --outdir {snakemake.params.tmpdir}  "
+    "(prokka --outdir {snakemake.params.tmpdir}  "
     "  --prefix {snakemake.wildcards.bin}  "
     "  --force  "
     "  --compliant  "
