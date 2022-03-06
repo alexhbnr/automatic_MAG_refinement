@@ -108,13 +108,13 @@ rule screen_kp_contigs:
         "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.index"
     message: "Assign taxonomy via the GTDB for genes on contigs that were assigned to ranks kingdom and phylum"
     resources:
-        mem = 500,
+        mem = 550,
         cores = 24
     params:
         tmpdir = "{tmpdir}/mmseqs2_tmpdir",
         prefix = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes",
         gtdb_db = f"{config['resourcesdir']}/mmseqs2/gtdb/mmseqs2_gtdb"
-    threads: 36
+    threads: 24
     wrapper:
         "file:workflow/wrappers/mmseqs2_taxonomy"
 
