@@ -27,7 +27,7 @@ shell(
     "  {fafilename})"
 )
 
-for suffix in ['faa', 'ffn', 'fna', 'gff', 'tsv', 'txt']:
+for suffix in ['faa', 'ffn', 'fna', 'gbk', 'gff', 'tsv', 'txt']:
     shutil.copy(f"{snakemake.params.tmpdir}/{snakemake.wildcards.bin}.{suffix}",
                 f"{snakemake.params.outdir}/{snakemake.wildcards.bin}.{suffix}")
 shutil.rmtree(snakemake.params.tmpdir)
