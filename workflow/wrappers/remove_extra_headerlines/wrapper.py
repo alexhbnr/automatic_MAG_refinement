@@ -8,7 +8,7 @@ import pysam
 
 # Load BAM file
 bamfile = pysam.AlignmentFile(snakemake.input.bam)
-header = bamfile.header
+header = bamfile.header.to_dict()
 
 # Generate subset of SQ tags from contig list
 if snakemake.params.assembler == "megahit":
@@ -23,8 +23,7 @@ header_sq = [{'SN': contig[0], 'LN': int(contig[1])}
 
 # Add contigs of mates aligning to different contig than in bin to header
 contig_ids = [contig[0] for contig in sq_info]
-contig_lengths = {name: len(seq)
-                  for name, seq in pyfastx.Fasta(snakemake.params.fasta, build_index=False)}
+contig_lengths = {c['SN']: c['LN'] for c in header['SQ']}
 for read in bamfile:
     if read.is_paired:
         if read.next_reference_name not in contig_ids and read.next_reference_name is not None:

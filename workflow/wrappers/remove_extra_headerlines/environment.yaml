@@ -1,8 +1,9 @@
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
   - defaults
 dependencies:
-  - python
-  - pysam
-  - pyfastx
+  - python=3.10
+  - bioconda::pysam>=0.17
+  - bioconda::pyfastx>=1.1
+  - conda-forge::libdeflate=1.18
