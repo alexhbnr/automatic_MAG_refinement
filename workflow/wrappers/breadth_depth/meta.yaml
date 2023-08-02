@@ -1,4 +1,0 @@
-name: "breadth_depth"
-description: Calculate the breadth and depth of all contigs of a MAG.
-authors:
-  - Alexander Hübner

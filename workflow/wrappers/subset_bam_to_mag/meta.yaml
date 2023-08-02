@@ -1,4 +1,0 @@
-name: "subset_bam_to_mag"
-description: Subset the BAM file to reads aligning to contigs of the MAG.
-authors:
-  - Alexander Hübner
