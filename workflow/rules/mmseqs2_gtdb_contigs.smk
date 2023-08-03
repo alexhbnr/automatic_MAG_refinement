@@ -1,11 +1,3 @@
-import os
-import sys
-
-import pandas as pd
-
-wildcard_constraints:
-    bin = "[A-Za-z0-9\.]+_[0-9]+"
-
 #### Auxilliary functions ######################################################
 
 def return_bin_fas(wildcards):
@@ -36,7 +28,7 @@ rule mmseqs2_gtdb_contigs:
 
 rule concat_bins:
     output:
-        temp("{tmpdir}/mmseqs2/all_contigs.fasta")
+        temp("{tmpdir}/mmseqs2/concat/all_contigs.fasta")
     message: "Concatenate all contigs that were binned into a single FastA"
     resources:
         mem = 4,
@@ -49,61 +41,88 @@ rule concat_bins:
 
 rule createdb_bins:
     input:
-        "{tmpdir}/mmseqs2/all_contigs.fasta"
+        "{tmpdir}/mmseqs2/concat/all_contigs.fasta"
     output:
-        "{tmpdir}/mmseqs2/all_contigs.contigs"
+        "{tmpdir}/mmseqs2/concat/all_contigs.contigs"
     message: "Create database of contigs"
+    container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
     resources:
         mem = 16,
         cores = 1
-    wrapper:
-        "file:workflow/wrappers/mmseqs2_createdb"
+    shell:
+        "mmseqs createdb {input} {output}"
 
 rule screen:
     input:
-        db = f"{config['resourcesdir']}/mmseqs2/gtdb/mmseqs2_gtdb_mapping",
-        contigs = "{tmpdir}/mmseqs2/all_contigs.contigs"
+        db = f"{config['resourcesdir']}/mmseqs2/gtdb/mmseqs2_gtdb_r207_db_mapping",
+        contigs = "{tmpdir}/mmseqs2/concat/all_contigs.contigs"
     output:
-        "{tmpdir}/mmseqs2/all_contigs.mmseqs2_gtdb.index"
+        "{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb.index"
     message: "Assign taxonomy via the GTDB for contigs"
+    container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
     resources:
-        mem = 500,
+        mem = 750,
         cores = 36
     params:
         tmpdir = "{tmpdir}/mmseqs2_tmpdir",
-        prefix = "{tmpdir}/mmseqs2/all_contigs.mmseqs2_gtdb",
-        gtdb_db = f"{config['resourcesdir']}/mmseqs2/gtdb/mmseqs2_gtdb"
+        prefix = "{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb",
+        gtdb_db = f"{config['resourcesdir']}/mmseqs2/gtdb/mmseqs2_gtdb_r207_db"
     threads: 24
-    wrapper:
-        "file:workflow/wrappers/mmseqs2_taxonomy"
+    shell:
+        """
+        if [[ $(stat -c%s {input.contigs}) -ge 50 ]]; then
+            mmseqs taxonomy \
+                {input.contigs} \
+                {params.gtdb_db} \
+                {params.prefix} \
+                {params.tmpdir} \
+                -a \
+                --tax-lineage 1 \
+                --lca-ranks kingdom,phylum,class,order,family,genus,species \
+                --majority 0.5 \
+                --vote-mode 1 \
+                --orf-filter 1 \
+                --remove-tmp-files 1 \
+                --threads {threads}
+        else
+            touch {output}
+        fi
+        """
 
 rule create_tsv:
     input:
-        contigs = "{tmpdir}/mmseqs2/all_contigs.contigs",
-        assignments = "{tmpdir}/mmseqs2/all_contigs.mmseqs2_gtdb.index"
+        contigs = "{tmpdir}/mmseqs2/concat/all_contigs.contigs",
+        assignments = "{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb.index"
     output:
-        pipe("{tmpdir}/mmseqs2/all_contigs.mmseqs2_gtdb.tsv")
+        pipe("{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb.tsv")
     message: "Convert MMSeqs2 GTDB results to TSV"
+    container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
     resources:
         mem = 8,
         cores = 1
     params:
-        prefix = "{tmpdir}/mmseqs2/all_contigs.mmseqs2_gtdb",
-    wrapper:
-        "file:workflow/wrappers/mmseqs2_createtsv"
+        prefix = "{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb",
+    shell:
+        """
+        if [[ $(stat -c%s {input.contigs}) -ge 50 ]]; then
+            mmseqs createtsv {input.contigs} {params.prefix} {output}
+        else
+            touch {output}
+        fi
+        """
 
 rule mmseqs2_annotatetsv:
     input:
-        "{tmpdir}/mmseqs2/all_contigs.mmseqs2_gtdb.tsv"
+        "{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb.tsv"
     output:
-        "{tmpdir}/mmseqs2/all_contigs.mmseqs2_gtdb.annot.tsv"
+        "{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb.annot.tsv"
     message: "Add header to MMSeqs2 table"
     wrapper:
         "file:workflow/wrappers/mmseqs2_annotatetsv"
 
 rule mmseqs2_splittsv:
     input:
-        "{tmpdir}/mmseqs2/all_contigs.mmseqs2_gtdb.annot.tsv"
+        "{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb.annot.tsv"
     output:
         touch("{tmpdir}/mmseqs2/mmseqs2_splittsv.done")
     message: "Split MMSeqs2 result table into bins"

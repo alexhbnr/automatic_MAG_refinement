@@ -1,4 +1,0 @@
-name: "mmseqs2_taxonomy"
-description: Assign the MAG contig database to a taxonomic unit using a reference database using MMSeqs2.
-authors:
-  - Alexander Hübner

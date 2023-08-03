@@ -1,4 +1,0 @@
-name: "mmseqs2_createdb"
-description: Create MMSeqs2 database of contigs of the MAG.
-authors:
-  - Alexander Hübner

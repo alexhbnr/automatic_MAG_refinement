@@ -1,11 +1,9 @@
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
   - defaults
 dependencies:
   - python
-  - pip
+  - biopython
   - pandas
   - pyfastx
-  - pip:
-    - bgzip

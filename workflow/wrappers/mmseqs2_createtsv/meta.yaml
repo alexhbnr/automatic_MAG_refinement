@@ -1,4 +1,0 @@
-name: "mmseqs2_createtsv"
-description: Summarise the MMSeqs2 results into a TSV.
-authors:
-  - Alexander Hübner
