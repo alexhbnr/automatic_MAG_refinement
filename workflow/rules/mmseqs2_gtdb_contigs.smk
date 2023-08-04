@@ -62,7 +62,7 @@ rule screen:
     container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
     resources:
         mem = 750,
-        cores = 36
+        cores = 24
     params:
         tmpdir = "{tmpdir}/mmseqs2_tmpdir",
         prefix = "{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb",

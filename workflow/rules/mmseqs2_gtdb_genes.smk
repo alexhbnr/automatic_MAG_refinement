@@ -1,9 +1,3 @@
-import pandas as pd
-
-wildcard_constraints:
-    sample = "[A-Za-z0-9\.]+",
-    bin = "[A-Za-z0-9\.]+_[0-9]+"
-
 #### Auxilliary functions ######################################################
 
 def return_genes_fas(wildcards):
@@ -30,7 +24,7 @@ def return_filter_fasta_files(wildcards):
         metawrap['binid'] = metawrap['bin'].str.extract(r'bin.([0-9]+)$').astype(int)
         metawrap['sample_binID'] = [f"{sample}_{i:03}" for i in metawrap['binid']]
         bins.extend(metawrap['sample_binID'].tolist())
-    return [f"{config['resultdir']}/{b.split('_')[0]}/bins/{b}.fasta.gz" for b in bins]
+    return [f"{config['resultdir']}/{b}/{b}.fasta.gz" for b in bins]
 
 ################################################################################
 
@@ -40,25 +34,32 @@ rule mmseqs2_gtdb_genes:
     output:
         touch(f"{config['tmpdir']}/filter_contigs.done")
 
-rule prokka_mag:
+rule pyrodigal:
     output:
-        "{tmpdir}/prokka/{bin}.gff"
-    message: "Run Prokka on contigs of bin {wildcards.bin}"
+        gff = "{tmpdir}/pyrodigal/{bin}.gff",
+        ffn = "{tmpdir}/pyrodigal/{bin}.ffn",
+    container: "docker://quay.io/biocontainers/pyrodigal:2.3.0--py311h031d066_0"
     resources:
-        mem = 16,
-        cores = 8
+        mem = 8,
+        cores = 4
     params:
-        fa = lambda wildcards: path_to_bin_fa(wildcards),
-        tmpdir = "{tmpdir}/prokka_bin_{bin}",
-        outdir = "{tmpdir}/prokka",
-    threads: 8
-    wrapper:
-        "file:workflow/wrappers/prokka"
+        fa = lambda wildcards: path_to_bin_fa(wildcards)
+    threads: 4
+    shell:
+        """
+        pyrodigal \
+            -i {params.fa} \
+            -o {output.gff} \
+            -d {output.ffn} \
+            -p meta \
+            -j {threads}
+        """
 
 rule identify_kingdom_phylum_contigs:
     input:
         mmseqs2 = "{tmpdir}/mmseqs2_gtdb_contigs.done",
-        prokka = "{tmpdir}/prokka/{bin}.gff"
+        gff = "{tmpdir}/pyrodigal/{bin}.gff",
+        ffn = "{tmpdir}/pyrodigal/{bin}.ffn"
     output:
         fa = "{tmpdir}/mmseqs2_genes/{bin}-contigs_superkingdom_phylum.fa.gz",
         mclineage = "{tmpdir}/mmseqs2_genes/{bin}-most_common_lineage.txt"
@@ -68,7 +69,7 @@ rule identify_kingdom_phylum_contigs:
         cores = 1
     params:
         fa = lambda wildcards: path_to_bin_fa(wildcards),
-        prokkadir = "{tmpdir}/prokka",
+        prokkadir = "{tmpdir}/pyrodigal",
         tsv = "{tmpdir}/mmseqs2/{bin}.mmseqs2_gtdb.annot.tsv",
     script:
         "../scripts/identify_kingdom_phylum_contigs.py"
@@ -94,29 +95,49 @@ rule createdb_bins_kp_contigs:
     output:
         "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_genes"
     message: "Create database of genes on contigs that were assigned to ranks kingdom and phylum"
+    container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
     resources:
         mem = 16,
         cores = 1
-    wrapper:
-        "file:workflow/wrappers/mmseqs2_createdb"
+    shell:
+        "mmseqs createdb {input} {output}"
 
 rule screen_kp_contigs:
     input:
-        db = f"{config['resourcesdir']}/mmseqs2/gtdb/mmseqs2_gtdb_mapping",
+        db = f"{config['resourcesdir']}/mmseqs2/gtdb/mmseqs2_gtdb_r207_db_mapping",
         contigs = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_genes"
     output:
         "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.index"
     message: "Assign taxonomy via the GTDB for genes on contigs that were assigned to ranks kingdom and phylum"
+    container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
     resources:
-        mem = 550,
+        mem = 750,
         cores = 24
     params:
         tmpdir = "{tmpdir}/mmseqs2_tmpdir",
         prefix = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes",
-        gtdb_db = f"{config['resourcesdir']}/mmseqs2/gtdb/mmseqs2_gtdb"
+        gtdb_db = f"{config['resourcesdir']}/mmseqs2/gtdb/mmseqs2_gtdb_r207_db"
     threads: 24
-    wrapper:
-        "file:workflow/wrappers/mmseqs2_taxonomy"
+    shell:
+        """
+        if [[ $(stat -c%s {input.contigs}) -ge 50 ]]; then
+            mmseqs taxonomy \
+                {input.contigs} \
+                {params.gtdb_db} \
+                {params.prefix} \
+                {params.tmpdir} \
+                -a \
+                --tax-lineage 1 \
+                --lca-ranks kingdom,phylum,class,order,family,genus,species \
+                --majority 0.5 \
+                --vote-mode 1 \
+                --orf-filter 1 \
+                --remove-tmp-files 1 \
+                --threads {threads}
+        else
+            touch {output}
+        fi
+        """
 
 rule create_tsv_kp_contigs:
     input:
@@ -125,13 +146,20 @@ rule create_tsv_kp_contigs:
     output:
         pipe("{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.tsv")
     message: "Convert MMSeqs2 GTDB results to TSV"
+    container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
     resources:
         mem = 8,
         cores = 1
     params:
         prefix = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes",
-    wrapper:
-        "file:workflow/wrappers/mmseqs2_createtsv"
+    shell:
+        """
+        if [[ $(stat -c%s {input.contigs}) -ge 50 ]]; then
+            mmseqs createtsv {input.contigs} {params.prefix} {output}
+        else
+            touch {output}
+        fi
+        """
 
 rule annotate_tsv_kp_contigs:
     input:
@@ -159,13 +187,13 @@ rule filter_contigs:
         genes_mmseqs2 = lambda wildcards: f"{config['tmpdir']}/mmseqs2_genes/mmseqs2_splittsv.done",
         depth = lambda wildcards: f"{config['tmpdir']}/depth/{wildcards.bin}.breadth_depth.txt"
     output:
-        fa = "{resultdir}/{sample}/bins/{bin}.fasta.gz",
-        contigs = "{resultdir}/{sample}/bins/{bin}.contigs.txt"
+        fa = "{resultdir}/{bin}/{bin}.fasta.gz",
+        contigs = "{resultdir}/{bin}/{bin}.contigs.txt"
     message: "Automatically filter contigs that have a high chance to not belong to major lineage: {wildcards.bin} for sample {wildcards.sample}"
     params:
         fa = lambda wildcards: path_to_bin_fa(wildcards),
         contigs_mmseqs2 = lambda wildcards: f"{config['tmpdir']}/mmseqs2/{wildcards.bin}.mmseqs2_gtdb.annot.tsv",
         genes_mmseqs2 = lambda wildcards: f"{config['tmpdir']}/mmseqs2_genes/{wildcards.bin}.mmseqs2_gtdb.annot.tsv",
-        prokkadir = lambda wildcards: f"{config['tmpdir']}/prokka"
+        prokkadir = lambda wildcards: f"{config['tmpdir']}/pyrodigal"
     wrapper:
         "file:workflow/wrappers/filter_contigs"
