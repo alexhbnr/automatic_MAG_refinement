@@ -4,6 +4,5 @@ channels:
   - defaults
 dependencies:
   - python
-  - pysam ==0.17
-  - biopython ==1.76
-  - cmseq
+  - pandas
+  - pyfastx>=1.1

@@ -1,0 +1,4 @@
+name: "breadth_depth_filtered_contigs"
+description: Subset previously obtained TSV with depth per contig to retained contigs.
+authors:
+  - Alexander Hübner

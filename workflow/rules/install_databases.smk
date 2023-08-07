@@ -5,7 +5,8 @@ rule install_dbs:
         mmseqs2_gtdb = "{resourcesdir}/mmseqs2/gtdb/mmseqs2_gtdb_r207_db_mapping",
         checkm_db = "{resourcesdir}/checkM/setRoot.done",
         gunc_db = "{resourcesdir}/GUNC/db",
-        checkm2_db = "{resourcesdir}/checkm2/CheckM2_database/uniref100.KO.1.dmnd"
+        checkm2_db = "{resourcesdir}/checkm2/CheckM2_database/uniref100.KO.1.dmnd",
+        bakta = "{resourcesdir}/bakta/downloaded"
     output:
         touch("{resourcesdir}/databases_installation.done")
 
@@ -78,6 +79,38 @@ rule install_gunc_database:
         """
         mkdir {params.dir}
         gunc download_db {params.dir}
+        """
+
+rule download_bakta_db:
+    output:
+        touch("{resourcesdir}/bakta/downloaded")
+    message: "Download and prepare the reference DB for Bakta"
+    container: "/mnt/archgen/tools/singularity/containers/depot.galaxyproject.org-singularity-bakta-1.7.0--pyhdfd78af_0.img"
+    resources:
+        mem = 4,
+        cores = 1
+    params:
+        dir = "{resourcesdir}/bakta"
+    shell:
+        """
+        bakta_db download --output {params.dir}
+        """
+
+rule gtdbtk_download_db:
+    output:
+        "{resourcedir}/gtdbtk/gtdbtk_r207_v2/metadata/metadata.txt"
+    message: "Download and set-up the GTDBTK database"
+    container: "docker://quay.io/biocontainers/gtdbtk:2.3.2--pyhdfd78af_0"
+    params:
+        url = "https://data.gtdb.ecogenomic.org/releases/release207/207.0/auxillary_files/gtdbtk_r207_v2_data.tar.gz",
+        tarball = "{resourcedir}/gtdbtk/gtdbtk_r207_v2_data.tar.gz",
+        gtdbtk_dir = "{resourcedir}/gtdbtk/gtdbtk_r207_v2"
+    shell:
+        """
+        wget -O {params.tarball} {url} && \
+        tar -xvzf {params.tarball} -C '{params.gtdbtk_dir}' --strip 1 > /dev/null && \
+        rm {params.tarball} &&  \
+        conda env config vars set GTDBTK_DATA_PATH='{gtdbtk_dir}'
         """
 
 ################################################################################

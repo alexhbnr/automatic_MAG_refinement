@@ -1,4 +1,0 @@
-name: "polymut"
-description: Calculate the frequency of non-synonymous minor alleles in the coding regions across all genes of a MAG.
-authors:
-  - Alexander Hübner
