@@ -1,4 +1,0 @@
-name: "checkm_qa"
-description: Generate checkM quality report for the set of FastA files of MAGs.
-authors:
-  - Alexander Hübner

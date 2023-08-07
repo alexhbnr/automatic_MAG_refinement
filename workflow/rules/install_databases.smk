@@ -2,17 +2,18 @@
 
 rule install_dbs:
     input:
-        mmseqs2_gtdb = "{resourcesdir}/mmseqs2/gtdb/mmseqs2_gtdb_mapping",
+        mmseqs2_gtdb = "{resourcesdir}/mmseqs2/gtdb/mmseqs2_gtdb_r207_db_mapping",
         checkm_db = "{resourcesdir}/checkM/setRoot.done",
-        gunc_db = "{resourcesdir}/GUNC/db"
+        gunc_db = "{resourcesdir}/GUNC/db",
+        checkm2_db = "{resourcesdir}/checkm2/CheckM2_database/uniref100.KO.1.dmnd"
     output:
         touch("{resourcesdir}/databases_installation.done")
 
 rule install_mmseqs2_gtdb_db:
     output:
-        "{resourcesdir}/mmseqs2/gtdb/mmseqs2_gtdb_mapping"
+        "{resourcesdir}/mmseqs2/gtdb/mmseqs2_gtdb_r207_db_mapping"
     message: "Install GTDB database for MMSeqs2 aminoacid profiling"
-    conda: "envs/MMSeqs2_GTDB.yaml"
+    container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
     resources:
         cores = 32,
         mem = 32
@@ -48,7 +49,7 @@ rule checkM_setRoot:
     output:
         touch("{resourcesdir}/checkM/setRoot.done")
     message: "Specify the database folder in checkM"
-    conda: "envs/checkM.yaml"
+    container: "https://depot.galaxyproject.org/singularity/checkm-genome:1.2.2--pyhdfd78af_1"
     params:
         dbdir = "{resourcesdir}/checkM"
     shell:
@@ -56,11 +57,21 @@ rule checkM_setRoot:
         echo {params.dbdir} | checkm data setRoot {params.dbdir}
         """
 
+rule install_checkm2_database:
+    output:
+        "{resourcesdir}/checkm2/CheckM2_database/uniref100.KO.1.dmnd"
+    message: "Install CheckM2 database"
+    container: "https://depot.galaxyproject.org/singularity/checkm2:1.0.1--pyh7cba7a3_0"
+    params:
+        dir = "{resourcesdir}/checkm2"
+    shell:
+        "checkm2 database --download --path {params.dir}"
+
 rule install_gunc_database:
     output:
         directory("{resourcesdir}/GUNC/db")
     message: "Install GUNC database"
-    conda: "envs/GUNC.yaml"
+    container: "https://depot.galaxyproject.org/singularity/gunc:1.0.5--pyhdfd78af_0"
     params:
         dir = "{resourcesdir}/GUNC/db"
     shell:

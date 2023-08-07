@@ -1,4 +1,0 @@
-name: "checkm_lineage_wf"
-description: Run checkM's lineage workflow on the set of FastA files of MAGs.
-authors:
-  - Alexander Hübner
