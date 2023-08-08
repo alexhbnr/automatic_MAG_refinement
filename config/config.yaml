@@ -1,4 +1,9 @@
-sampletsv: "samples.tsv"
+wildcard_constraints_bins: "[A-Za-z0-9\\.\\-]+_[0-9]+"
+wildcard_constraints_sample: "[A-Za-z0-9\\.\\-]+"
+sampletsv: "test/samples.tsv"
 resourcesdir: "resources"
-resultdir: "results"
-tmpdir: "workflow/tmp"
+resultdir: "test/results"
+tmpdir: "test/tmp"
+assembler: "metaspades"
+polymut_depth: 50
+phylophlan_db_version: "CMG2324" # "SGB.Jul20"

@@ -26,6 +26,7 @@ include: "rules/mmseqs2_gtdb_contigs.smk"
 include: "rules/mmseqs2_gtdb_genes.smk"
 include: "rules/evaluation_samplelevel.smk"
 include: "rules/evaluation_maglevel.smk"
+include: "rules/taxprofiling.smk"
 
 ################################################################################
 
@@ -33,9 +34,9 @@ wildcard_constraints:
     bin = config['wildcard_constraints_bins'],
     sample = config['wildcard_constraints_sample']
 
-#rule all:
-    #input:
-        #f"{config['resultdir']}/MAG_automaticrefinement_summary.tsv"
+rule all:
+    input:
+        f"{config['resultdir']}/MAG_automaticrefinement_summary.tsv"
 
 rule summarise_results:
     input:
@@ -44,70 +45,73 @@ rule summarise_results:
         mmseqs2_contigs = expand("{tmpdir}/mmseqs2_gtdb_contigs.done", tmpdir=[config['tmpdir']]),
         mmseqs2_genes = expand("{tmpdir}/filter_contigs.done", tmpdir=[config['tmpdir']]),
         eval_sample = expand("{tmpdir}/evaluation_samplelevel.done", tmpdir=[config['tmpdir']]),
-        #eval_mag = expand("{tmpdir}/evaluation_maglevel.done", tmpdir=[config['tmpdir']]),
-    #output:
-        #f"{config['resultdir']}/MAG_automaticrefinement_summary.tsv"
-    #message: "Summarise the results of the automatic refinement of the MAGs"
-    #params:
-    #run:
-        ## General infos from MetaWRAP
-        #metawrap = []
-        #for sample in SAMPLES:
-            #mw_report = pd.read_csv(sampletsv.at[sample, 'metawrapreport'],
-                                    #sep="\t") \
-                          #.assign(sample=sample)
-            #mw_report['binid'] = mw_report['bin'].str.extract(r'bin.([0-9]+)$').astype(int)
-            #mw_report['sample_binID'] = mw_report['sample'] + "_" + [f"{i:03}" for i in mw_report['binid']]
-            #metawrap.append(mw_report)
+        eval_mag = expand("{tmpdir}/evaluation_maglevel.done", tmpdir=[config['tmpdir']]),
+        taxprofiling = f"{config['resultdir']}/tax_profiling.tsv"
+    output:
+        f"{config['resultdir']}/MAG_automaticrefinement_summary.tsv"
+    message: "Summarise the results of the automatic refinement of the MAGs"
+    params:
+    run:
+        # General infos from MetaWRAP
+        metawrap = []
+        for sample in SAMPLES:
+            mw_report = pd.read_csv(sampletsv.at[sample, 'metawrapreport'],
+                                    sep="\t") \
+                          .assign(sample=sample)
+            mw_report['binid'] = mw_report['bin'].str.extract(r'bin.([0-9]+)$').astype(int)
+            mw_report['sample_binID'] = mw_report['sample'] + "_" + [f"{i:03}" for i in mw_report['binid']]
+            metawrap.append(mw_report)
+        metawrap = pd.concat(metawrap)[['sample_binID', 'sample', 'bin', 'binner']]
 
-        #metawrap = pd.concat(metawrap)[['sample_binID', 'sample', 'bin', 'binner']]
+        # Results from CheckM  and GUNC
+        checkm_gunc_fns = [f"{config['resultdir']}/sample_stats/{sample}_GUNC_checkM_checkM2.merged.tsv"
+                           for sample in SAMPLES]
+        checkm_gunc = pd.concat([pd.read_csv(fn, sep="\t") \
+                                 .assign(sample=os.path.basename(os.path.dirname(fn)))
+                                 for fn in checkm_gunc_fns])
+        checkm_gunc = checkm_gunc.rename({'genome': 'sample_binID'}, axis=1)
+        # Results from PolyMut and Breadth_Coverage
+        cmseq_fns = [f"{config['resultdir']}/{b}/{b}.{analysis}.txt"
+                     for b in metawrap['sample_binID'].tolist()
+                     for analysis in ['polymut', 'breadth_depth']]
+        polymut_results = []
+        cov_results = []
+        for fn in cmseq_fns:
+            if "polymut" in fn:
+                polyrate = pd.read_csv(fn, sep=" ", header=None, names=['noNonSyn', 'noSyn', 'noSites']) \
+                           .assign(sample_binID=os.path.basename(fn).replace(".polymut.txt", ""))
+                polymut_results.append(polyrate)
+            else:  # Read CMSeq breadth and depth
+                breadth = pd.read_csv(fn, sep="\t", index_col=[0])
+                # Calculate average breadth and depth per bin
+                avg_breadth = breadth[['Breadth', 'Depth_(avg)']].agg('mean') \
+                    .to_frame().transpose() \
+                    .assign(sample_binID=os.path.basename(fn).replace(".breadth_depth.txt", ""))
+                avg_breadth.columns = ['breadth', 'meanCov', 'sample_binID']
+                cov_results.append(avg_breadth)
+        polymut_results = pd.concat(polymut_results)
+        polymut_results['polyrate'] = polymut_results['noNonSyn'] / polymut_results['noSites']
+        polymut_results['pass.Polyrate'] = polymut_results['polyrate'] < 0.005
+        polymut_results[['noNonSyn', 'noSyn', 'noSites']] = polymut_results[['noNonSyn', 'noSyn', 'noSites']].astype(int)
+        cov_results = pd.concat(cov_results)
 
-        ## Results from CheckM  and GUNC
-        #checkm_gunc_fns = [f"{config['resultdir']}/{sample}/{sample}_GUNC_checkM.merged.tsv"
-                           #for sample in SAMPLES]
-        #checkm_gunc = pd.concat([pd.read_csv(fn, sep="\t") \
-                                 #.assign(sample=os.path.basename(os.path.dirname(fn)))
-                                 #for fn in checkm_gunc_fns])
-        #checkm_gunc = checkm_gunc.rename({'genome': 'sample_binID'}, axis=1)
-        ## Results from PolyMut and Breadth_Coverage
-        #cmseq_fns = [f"{config['resultdir']}/{b.split('_')[0]}/bins/{b}.{analysis}.txt"
-                     #for b in metawrap['sample_binID'].tolist()
-                     #for analysis in ['polymut', 'breadth_depth']]
-        #polymut_results = []
-        #cov_results = []
-        #for fn in cmseq_fns:
-            #if "polymut" in fn:
-                #polyrate = pd.read_csv(fn, sep=" ", header=None, names=['noNonSyn', 'noSyn', 'noSites']) \
-                           #.assign(sample_binID=os.path.basename(fn).replace(".polymut.txt", ""))
-                #polymut_results.append(polyrate)
-            #else:  # Read CMSeq breadth and depth
-                #breadth = pd.read_csv(fn, sep="\t", index_col=[0])
-                ## Calculate average breadth and depth per bin
-                #avg_breadth = breadth[['Breadth', 'Depth avg']].agg('mean') \
-                    #.to_frame().transpose() \
-                    #.assign(sample_binID=os.path.basename(fn).replace(".breadth_depth.txt", ""))
-                #avg_breadth.columns = ['breadth', 'meanCov', 'sample_binID']
-                #cov_results.append(avg_breadth)
-        #polymut_results = pd.concat(polymut_results)
-        #polymut_results['polyrate'] = polymut_results['noNonSyn'] / polymut_results['noSites']
-        #polymut_results['pass.Polyrate'] = polymut_results['polyrate'] < 0.005
-        #cov_results = pd.concat(cov_results)
+        # Results from the taxonomic profiling
+        taxprofiling = pd.read_csv(f"{config['resultdir']}/tax_profiling.tsv", sep="\t")
 
-        ## Results from PhyloPhlAn
-        #phylophlan = pd.read_csv(f"{config['resultdir']}/phylophlan_closestGenomes.tsv", sep="\t", usecols=[0, 1])
-        #phylophlan.columns = ['sample_binID', 'nearestGenome']
-
-        #metawrap[['sample_binID', 'sample', 'bin', 'binner']] \
-            #.merge(checkm_gunc.drop(['sample'], axis=1), how="left", on="sample_binID") \
-            #.merge(polymut_results[['sample_binID', 'polyrate', 'pass.Polyrate']],
-                   #how="left", on="sample_binID") \
-            #.merge(cov_results, how="left", on="sample_binID") \
-            #.merge(phylophlan, how="left", on="sample_binID") \
-            #[['sample_binID', 'sample', 'bin', 'binner', 'nearestGenome',
-              #'pass.MIMAG_medium', 'pass.MIMAG_high', 'pass.GUNC', 'pass.Polyrate',
-              #'checkM.genome_size', 'checkM.GC', 'checkM.coding_density', 'checkM.N50_contigs',
-              #'meanCov', 'breadth',
-              #'checkM.lineage', 'checkM.completeness', 'checkM.contamination', 'checkM.strain_heterogeneity',
-              #'GUNC.n_contigs', 'GUNC.divergence_level', 'GUNC.CSS', 'polyrate']] \
-            #.to_csv(output[0], sep="\t", index=False, float_format="%.4f")
-
+        metawrap[['sample_binID', 'sample', 'bin', 'binner']] \
+            .merge(checkm_gunc.drop(['sample'], axis=1), how="left", on="sample_binID") \
+            .merge(polymut_results[['sample_binID', 'polyrate', 'pass.Polyrate']],
+                   how="left", on="sample_binID") \
+            .merge(cov_results, how="left", on="sample_binID") \
+            .merge(taxprofiling, how="left", on="sample_binID") \
+            [['sample_binID', 'binner',
+              'pass.MIMAG_medium', 'pass.MIMAG_high', 'pass.GUNC', 'pass.Polyrate',
+              'GTDBlineage', 'SGBtype', 'SGBlineage',
+              'checkM.genome_size', 'checkM.GC', 'GUNC.n_contigs', 'checkM.N50_contigs', 'checkM.coding_density',
+              'meanCov', 'breadth',
+              'checkM.lineage', 'checkM.completeness', 'checkM.contamination', 'checkM.strain_heterogeneity',
+              'checkM2.completeness', 'checkM2.contamination',
+              'GUNC.divergence_level', 'GUNC.CSS', 'GUNC.contamination_portion',
+              'polyrate']] \
+            .sort_values(['sample_binID']) \
+            .to_csv(output[0], sep="\t", index=False, float_format="%.4f")
