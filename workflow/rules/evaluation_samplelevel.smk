@@ -7,6 +7,8 @@ def return_bins_of_sample(wildcards):
     return [f"{config['tmpdir']}/fastas/{b.split('_')[0]}/{b}.fa" for b in metawrap['sample_binID']]
 ################################################################################
 
+localrules: decompress_filtered_contigs
+
 rule evaluation_samplelevel:
     input:
         expand("{resultdir}/sample_stats/{sample}_GUNC_checkM_checkM2.merged.tsv", resultdir=[config['resultdir']], sample=SAMPLES),
