@@ -1,10 +1,10 @@
-wildcard_constraints_bins: "[A-Za-z0-9\\.\\-]+_[0-9]+"
-wildcard_constraints_sample: "[A-Za-z0-9\\.\\-]+"
+wildcard_constraints_sample: "[A-Za-z0-9\\.\\-]+"  # regex describing the naming scheme of samples
+wildcard_constraints_bins: "[A-Za-z0-9\\.\\-]+_[0-9]+"  # regex describing the naming scheme of bins; by default, regex of sample plus "_[0-9]+"
 sampletsv: "test/samples.tsv"
-resourcesdir: "resources"
+resourcesdir: "resources"  # directory for downloading databases
 resultdir: "test/results"
 tmpdir: "test/tmp"
-assembler: "metaspades"
-polymut_depth: 50
+assembler: "metaspades"  # naming scheme for contigs to expected; either metaspades or megahit
+polymut_depth: 50  # maximum sequencing depth of MAG; if higher, downsampling of the sequencing data 
 gtdb_version: 'r214.1'  # 'r207_v2'
 phylophlan_db_version: "CMG2324" # "SGB.Jul20"
