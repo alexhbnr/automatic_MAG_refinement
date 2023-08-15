@@ -2,6 +2,7 @@
 conda
 resources
 results
+snakemake_tmp
 workflow/.snakemake
 workflow/tmp
 README.Rmd
