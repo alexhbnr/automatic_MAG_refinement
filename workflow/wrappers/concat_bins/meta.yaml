@@ -1,4 +1,0 @@
-name: "concat_bins"
-description: Concatenate all bins into a single FastA file.
-authors:
-  - Alexander Hübner
