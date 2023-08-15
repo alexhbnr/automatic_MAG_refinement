@@ -33,8 +33,19 @@ rule bedfile_contigs:
     params:
         contigs = lambda wildcards: sampletsv.at[wildcards.bin.split("_")[0], 'metawrapreport'].replace("stats", "contigs"),
         fasta = lambda wildcards: sampletsv.at[wildcards.bin.split("_")[0], 'fastafn']
-    wrapper:
-        "file:workflow/wrappers/bedfile_contigs_of_bin"
+    run:
+        bincode = f"bin.{int(wildcards.bin.split('_')[1])}"
+        contigs = pd.read_csv(params.contigs, sep="\t",
+                              header=None, names=['contig', 'bin'])
+        contigs = contigs.loc[contigs['bin'] == bincode]
+        contig_lengths = {name: len(seq)
+                          for name, seq in pyfastx.Fasta(params.fasta, build_index=False)
+                          if name in contigs['contig'].tolist()}
+
+        # Write list of contigs for extraction
+        with open(output[0], "wt") as outfile:
+            for contig in contigs['contig']:
+                outfile.write(f"{contig}:1-{contig_lengths[contig]}\n")
 
 rule subset_bam_to_mag:
     input:

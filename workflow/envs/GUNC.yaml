@@ -1,7 +1,0 @@
-name: GUNC
-channels:
-  - conda-forge
-  - bioconda
-  - defaults
-dependencies:
-  - gunc
