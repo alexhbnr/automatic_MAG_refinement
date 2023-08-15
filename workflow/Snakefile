@@ -16,7 +16,6 @@ os.environ["OMP_NUM_THREADS"] = '1'
 configfile: "config/config.yaml"
 
 os.makedirs("snakemake_tmp", exist_ok=True)
-print(config['tmpdir'])
 os.makedirs(config['tmpdir'], exist_ok=True)
 
 #### Parse sample table ########################################################
