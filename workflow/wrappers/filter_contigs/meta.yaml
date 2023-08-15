@@ -1,4 +1,0 @@
-name: "filter_contigs"
-description: Remove all contigs that do not fall on the major lineage or divert in coverage.
-authors:
-  - Alexander Hübner

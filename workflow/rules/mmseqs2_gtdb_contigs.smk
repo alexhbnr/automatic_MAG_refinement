@@ -34,30 +34,14 @@ rule concat_bins:
         mem = 4,
         cores = 1
     params:
-        fas = lambda wildcards: return_bin_fas(wildcards),
-        type = "contigs"
+        fas = lambda wildcards: return_bin_fas(wildcards)
     run:
         with open(output[0], "wt") as outfile:
             for fn in params.fas:
-                input_empty = True
-                if params.type == "contigs":
-                    sample = os.path.basename(os.path.dirname(os.path.dirname(fn)))
-                elif params.type == "genes":
-                    sample = os.path.basename(fn).replace("-contigs_superkingdom_phylum.fa.gz", "")
-                # Test whether input FastA file is empty
-                if params.type == "genes":
-                    with open(fn, "rb") as f:
-                        fstart = f.read(3)
-                        if fstart.startswith(b"\x1f\x8b\x08"):  # gzipped
-                            if os.stat(fn).st_size > 50:
-                                input_empty = False
-                        else:
-                            if os.stat(fn).st_size > 0:
-                                input_empty = False
+                sample = os.path.basename(os.path.dirname(os.path.dirname(fn)))
                 # Write to file if not empty
-                if not input_empty or params.type == "contigs":
-                    for name, seq in pyfastx.Fasta(fn, build_index=False):
-                        outfile.write(f">{sample}:{name}\n{seq}\n")
+                for name, seq in pyfastx.Fasta(fn, build_index=False):
+                    outfile.write(f">{sample}:{name}\n{seq}\n")
 
 rule createdb_bins:
     input:

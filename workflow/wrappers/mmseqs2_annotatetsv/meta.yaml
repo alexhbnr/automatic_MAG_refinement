@@ -1,4 +1,0 @@
-name: "mmseqs2_annotatetsv"
-description: Add header to TSV file created by mmseqs createtsv
-authors:
-  - Alexander Hübner

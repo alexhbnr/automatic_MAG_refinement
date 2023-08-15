@@ -1,6 +1,11 @@
+import gzip
 import os
+from pathlib import Path
+import re
 
+from Bio import bgzf
 import pandas as pd
+import pyfastx
 from snakemake.utils import min_version
 
 min_version("7.0")
@@ -11,6 +16,8 @@ os.environ["OMP_NUM_THREADS"] = '1'
 configfile: "config/config.yaml"
 
 os.makedirs("snakemake_tmp", exist_ok=True)
+print(config['tmpdir'])
+os.makedirs(config['tmpdir'], exist_ok=True)
 
 #### Parse sample table ########################################################
 sampletsv = pd.read_csv(config['sampletsv'], sep="\t", index_col=[0])
