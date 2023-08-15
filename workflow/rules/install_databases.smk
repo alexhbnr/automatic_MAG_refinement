@@ -98,13 +98,14 @@ rule download_bakta_db:
 
 rule gtdbtk_download_db:
     output:
-        "{resourcedir}/gtdbtk/gtdbtk_r207_v2/metadata/metadata.txt"
+        f"{config['resourcesdir']}/gtdbtk/gtdbtk_{config['gtdb_version']}/metadata/metadata.txt"
     message: "Download and set-up the GTDBTK database"
     container: "docker://quay.io/biocontainers/gtdbtk:2.3.2--pyhdfd78af_0"
     params:
-        url = "https://data.gtdb.ecogenomic.org/releases/release207/207.0/auxillary_files/gtdbtk_r207_v2_data.tar.gz",
-        tarball = "{resourcedir}/gtdbtk/gtdbtk_r207_v2_data.tar.gz",
-        gtdbtk_dir = "{resourcedir}/gtdbtk/gtdbtk_r207_v2"
+        url = {'r207_v2': "https://data.gtdb.ecogenomic.org/releases/release207/207.0/auxillary_files/gtdbtk_r207_v2_data.tar.gz",
+               'r214.1': "https://data.gtdb.ecogenomic.org/releases/release214/214.1/auxillary_files/gtdbtk_r214_data.tar.gz"}[config['gtdb_version']],
+        tarball = f"{config['resourcesdir']}/gtdbtk/gtdbtk_{config['gtdb_version']}_data.tar.gz",
+        gtdbtk_dir = "{config['resourcesdir']}/gtdbtk/gtdbtk_{config['gtdb_version']}"
     shell:
         """
         wget -O {params.tarball} {url} && \

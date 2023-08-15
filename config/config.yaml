@@ -6,4 +6,5 @@ resultdir: "test/results"
 tmpdir: "test/tmp"
 assembler: "metaspades"
 polymut_depth: 50
+gtdb_version: 'r214.1'  # 'r207_v2'
 phylophlan_db_version: "CMG2324" # "SGB.Jul20"

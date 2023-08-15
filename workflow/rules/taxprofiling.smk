@@ -62,7 +62,7 @@ rule decompress_bins:
 
 rule gtdbtk_classify:
     input:
-        db = f"{config['resourcesdir']}/gtdbtk/gtdbtk_r207_v2/metadata/metadata.txt",
+        db = f"{config['resourcesdir']}/gtdbtk/gtdbtk_{config['gtdb_version']}/metadata/metadata.txt",
         fas = lambda wildcards: return_bins_for_taxprofiling(wildcards)
     output:
         "{tmpdir}/gtdbtk/gtdbtk.bac120.summary.tsv"
@@ -74,7 +74,7 @@ rule gtdbtk_classify:
     params:
         fadir = f"{config['tmpdir']}/taxprofiling_fas",
         outdir = f"{config['tmpdir']}/gtdbtk",
-        dbdir = f"{config['resourcesdir']}/gtdbtk/gtdbtk_r207_v2"
+        dbdir = f"{config['resourcesdir']}/gtdbtk/gtdbtk_{config['gtdb_version']}"
     threads: 32
     shell:
         """
