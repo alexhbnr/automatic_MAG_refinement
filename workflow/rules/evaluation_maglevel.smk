@@ -66,12 +66,16 @@ checkpoint breadth_depth_filtered_contigs:
     output:
         "{resultdir}/{bin}/{bin}.breadth_depth.txt"
     message: "Investigate the breadth and depth of sample {wildcards.bin}"
-    group: "polymut"
     resources:
         mem = 4,
         cores = 1
-    wrapper:
-        "file:workflow/wrappers/breadth_depth_filtered_contigs"
+    run:
+        # Retained contigs
+        contigs = [name for name, _ in pyfastx.Fastx(input.fasta)]
+        # Subset depth table
+        pd.read_csv(input.depth, sep="\t") \
+            .query('Contig.isin(@contigs)') \
+            .to_csv(output[0], sep="\t", index=False, float_format="%.1f")
 
 ################################################################################
 
@@ -85,8 +89,14 @@ rule bedfile_filtered_contigs:
     resources:
         mem = 2,
         cores = 1
-    wrapper:
-        "file:workflow/wrappers/bedfile_filtered_contigs"
+    run:
+        contig_lengths = {name: len(seq)
+                          for name, seq in pyfastx.Fasta(input[0], build_index=False)}
+
+        # Write list of contigs for extraction
+        with open(output[0], "wt") as outfile:
+            for contig in contig_lengths:
+                outfile.write(f"{contig}:1-{contig_lengths[contig]}\n")
 
 rule subsample_bam_of_mag:
     input:

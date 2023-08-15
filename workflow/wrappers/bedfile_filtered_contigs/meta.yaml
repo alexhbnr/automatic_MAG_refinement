@@ -1,4 +1,0 @@
-name: "bedfile_filtered_contigs"
-description: Generates BED file for the filtered contigs belonging to a specific MAG.
-authors:
-  - Alexander Hübner
