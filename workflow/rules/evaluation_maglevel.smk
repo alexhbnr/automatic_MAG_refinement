@@ -51,7 +51,7 @@ rule bakta:
             --threads {threads} \
             {input.fasta}
         for sfx in embl faa ffn fna gbff gff3 hypotheticals.faa hypotheticals.tsv json log tsv; do
-            gzip {params.outdir}/{params.prefix}.${{sfx}}
+            gzip -f {params.outdir}/{params.prefix}.${{sfx}}
         done
         """
 
