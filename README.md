@@ -1,12 +1,146 @@
 Automatic revision of MAGs to remove likely chimeric contigs
 ================
 
--   [Background](#background)
--   [References](#references)
+- <a href="#introduction" id="toc-introduction">Introduction</a>
+- <a href="#quick-start" id="toc-quick-start">Quick start</a>
+- <a href="#why-this-pipeline-matters"
+  id="toc-why-this-pipeline-matters">Why this pipeline matters</a>
+- <a href="#references" id="toc-references">References</a>
 
-## Background
+## Introduction
 
-The *de-novo* assembly of short-read metagenomic sequencing data has
+This is basic pipeline to automatically identify and remove contigs from
+metagenome-assembled genomes (MAGs) that have a high chance of being
+chimeric and do not actually belong to the MAG. It is written in
+[Snakemake](https://snakemake.readthedocs.io/) and makes use of
+containers
+([Singularity](https://docs.sylabs.io/guides/3.5/user-guide/index.html)
+and [Docker](https://www.docker.com/)) and [conda
+environments](https://docs.conda.io/en/latest/) to ensure its
+reproducibility. It has been previously been used by Klapper et al.
+(2023) and has received some further updates since then.
+
+The pipeline implements three different steps:
+
+1.  Taxonomic assignment of all contigs of a MAG using MMseqs2’s
+    taxonomy workflow (Mirdita et al. 2021) against the GTDB and
+    identifying of the most common lineage at the rank family or higher
+2.  Taxonomic assignment of every gene of a contig that could only be
+    assigned to the taxonomic rank kingdom or phylum using MMseqs2’s
+    taxonomy workflow (Mirdita et al. 2021) against the GTDB to
+    discriminate contigs carrying preserved genes from contigs carrying
+    genes from multiple lineages
+3.  Evaluation of the average depth of all contigs
+
+Afterwards, the information of these three steps are combined and
+contigs are removed because they are likely chimeric when:
+
+1.  A contig was assigned to a lineage at the taxonomic level class or
+    lower that does not overlap with the most common lineage of the MAG.
+    E.g. the main lineage was
+    `d_Bacteria;p_Firmicutes A;c_Clostridia;o_Lachnospirales;f_Lachnospiraceae`
+    but a contig was assigned to
+    `d_Bacteria;p_Firmicutes      A;c_Clostridia;o_Peptostreptococcales;f_Filifactoraceae;g_Peptoanaerobacter;s_Peptoanaerobacter      stomatis`.
+2.  A contig could only be assigned to the taxomic rank kingdom and
+    phylum and the per-gene analysis revealed that genes on this contig
+    can be assigned to a lineage other than the main lineage.
+3.  A contig could only be assigned to the taxomic rank kingdom and
+    phylum and its coverage was deviating from the average coverage of
+    all contigs assigned to the main lineage by more than two standard
+    deviations.
+
+Finally, the pipeline runs multiple quality evaluation steps on the
+refined MAGs:
+
+1.  Functional annotation using Bakta (Schwengers et al. n.d.)
+2.  Evaluation of the quality of the MAG using - checkM (Parks et
+    al. 2015) - checkM2 (Chklovski et al. 2023) - GUNC (Orakov et
+    al. 2021) - the presence of alternative alleles with a minimal
+    allele frequency of 20% within coding sequences that would lead to a
+    non-synonymous mutation (Pasolli et al. 2019)
+3.  Taxonomic assignment using - GTDBTK (Chaumeil et al. 2020) -
+    PhyloPhlAn (Asnicar et al. 2020)
+
+A detailed description of the methodology and some results can be found
+in the [Supplementary
+Material](https://www.science.org/doi/suppl/10.1126/science.adf5300/suppl_file/science.adf5300_sm.pdf)
+Section 3 “Reference-free binning of the *de novo* assembled contigs” of
+Klapper et al. (2023).
+
+## Quick start
+
+To be able to run the pipeline,
+[Snakemake](https://snakemake.readthedocs.io/) with a minimal version of
+7.0 is necessary. The easiest way to install the dependencies of this
+program and to have reproducible results is to create a new
+[conda](https://docs.conda.io/en/latest/) environment using the
+environment file provided with it.
+
+``` bash
+wget https://raw.githubusercontent.com/alexhbnr/automatic_MAG_refinement/main/environment.yml
+conda env create -f environment.yml
+```
+
+After activating the environment using
+
+``` bash
+conda activate automatic_MAG_refinement
+```
+
+the necessary Python environment has been created.
+
+Next, the pipeline itself needs to be downloaded. This can be easily
+down by cloning this repository to your computer via git
+
+``` bash
+git clone https://github.com/alexhbnr/automatic_MAG_refinement.git
+```
+
+or by downloading the zip file and extracting it:
+
+``` bash
+wget -O automatic_MAG_refinement.zip https://github.com/alexhbnr/automatic_MAG_refinement/archive/refs/heads/main.zip
+unzip automatic_MAG_refinement.zip
+```
+
+Finally, the configuration file and sample table have to be provided.
+Templates for these can be found in `config/config.yaml` for the
+configuration file and in `test/samples.tsv` for the sample table.
+
+To run a test case using the assembly results of sample FUM003, a
+Neanderthal dental calculus sample, that was first published by Fellows
+Yates et al. (2021) and later *de novo* assembled in Klapper et al.
+(2023):
+
+``` bash
+wget -O test/FUM003-megahit.fasta.gz https://share.eva.mpg.de/index.php/s/nQ7Df5Z4T2EFQrA
+wget -O test/FUM003.sorted.dedup.bam https://share.eva.mpg.de/index.php/s/fbQNLGs74AGit6J
+wget -O test/FUM003.sorted.dedup.bam.bai https://share.eva.mpg.de/index.php/s/B2nMAWLZCw5kK6y
+wget -O test/metawrap_50_10_bins.stats https://share.eva.mpg.de/index.php/s/dkqeA2fNMksdqsk
+```
+
+To start the pipeline, we run
+
+``` bash
+snakemake --use-conda --conda-prefix conda \
+          --use-singularity --singularity-prefix singularity -j 8
+```
+
+This will automatically evaluate the entries in the configuration file
+`config/config.yaml` and use the sample `FUM003` as input. The temporary
+files are written into the folder `tmp` and the results in the folder
+`results`.
+
+By activating the options `--use-conda` and `--use-singularity`,
+`snakemake` will download and install the programs necessary to run the
+pipeline via conda or pull the container images via singularity. This
+step will only happen once, at the first time or when you change the
+folder for storing these conda environments using `--conda-prefix` or
+`--singularity-prefix`, respectively.
+
+## Why this pipeline matters
+
+The *de novo* assembly of short-read metagenomic sequencing data has
 become the *de-facto* standard when studying the microbiome of complex
 samples. In contrast to genomes derived from cultured microbial
 isolates, the task of inferring which contig belongs to which genome is
@@ -24,30 +158,16 @@ Uritskiy, DiRuggiero, and Taylor 2018). However, the performance of the
 different combination of tools is dependent on the underlying set of
 sequencing data (Yue et al. 2020).
 
-In the last five years, there have been made attempts to standardise the
-minimum information that is to be provided for new metagenome-assembled
-genomes (MAGs) (Bowers et al. 2017). Two of the most important criteria
-here are the genome completeness and its contamination, which are hard
-to estimate in the absence of a ground truth. CheckM (Parks et al. 2015)
-has evolved to be the quasi standard tool to estimate these two
-parameters by inferring single-copy marker genes on the contigs of each
-MAG and evaluating these against an expected set of genes that is
-determined by assigning the MAG to a microbial lineage. Based on the
-suggestions by Bowers et al. (2017), a MAG is considered to be of
-high-quality when the completeness estimate \>= 90% and the
-contamination estimate \< 5%. A medium-quality MAG is required to have a
-completeness \>= 50% and a contamination \< 10%.
-
-However, in a recent publication, Orakov et al. (2021) could show that
-while checkM is able to identify contigs that do not belong to the
-consensus microbial lineage of the MAG, checkM fails to identify the
-presence of chimeric contigs in MAGs and thus overestimates the quality
-of MAG. To estimate the presence of chimeric contigs in a data set,
-Orakov et al. (2021) uses a very similar approach to checkM. The authors
-developed GUNC, which uses a database with genes and their known
-taxonomic origin, and identifies their presence on the contigs. If the
-authors observe a higher variety of taxonomic origins than expected from
-known microbial species, they will flag the MAG as likely be chimeric.
+There were attempts to standardise the evaluation of the minimum
+information that is to be provided for new metagenome-assembled genomes
+(MAGs) (Bowers et al. 2017). CheckM (Parks et al. 2015) has established
+itself as the *de-facto* standard for estimating the completeness and
+the contamination of a MAG based on marker genes. However, Orakov et al.
+(2021) could show that checkM’s approach only identifies the surplus of
+contigs from other taxa but is not able to identify chimeric contigs and
+therefore overestimates the quality. Instead, the authors developed
+their own tool, GUNC, that can evaluate whether a MAG is likely
+chimeric.
 
 How to proceed with MAGs that were either assigned to high or medium
 quality using checkM but returned a higher than expected GUNC score is
@@ -62,14 +182,14 @@ discard the problematic contigs. This manual process ranges from
 time-consuming to infeasible, when a dataset consists out of many
 samples with each a large number of MAGs.
 
-In the following, I present an automatic workflow that is heavily
-influenced by the suggestions by Chen et al. (2020) and automatises many
-steps that can be manually done in anvi’o. In brief, the pipeline
-written in Snakemake (Mölder et al. 2021) expects MAGs refined by
-MetaWRAP (Uritskiy, DiRuggiero, and Taylor 2018) as input and identifies
-contigs that are likely chimeric by inferring the majority lineage
-across all contigs using MMSeqs2 (Steinegger and Söding 2017) against
-the GTDB reference database (Parks et al. 2020) using the command
+Here, we developed an automatic workflow that is heavily influenced by
+the suggestions by Chen et al. (2020) and automatises many steps that
+can be manually done in anvi’o. In brief, the pipeline written in
+Snakemake (Mölder et al. 2021) expects MAGs refined by MetaWRAP
+(Uritskiy, DiRuggiero, and Taylor 2018) as input and identifies contigs
+that are likely chimeric by inferring the majority lineage across all
+contigs using MMSeqs2 (Steinegger and Söding 2017) against the GTDB
+reference database (Parks et al. 2020) using the command
 `mmseqs taxonomy` and discard contigs that diverge either by average
 sequencing depth or lineage assignment. For the revised contigs, a
 standard set of assembly information including an updated estimate for
@@ -89,6 +209,16 @@ Coverage and Composition.” *arXiv Preprint arXiv:1312.4038*.
 
 </div>
 
+<div id="ref-Asnicar2020" class="csl-entry">
+
+Asnicar, Francesco, Andrew Maltez Thomas, Francesco Beghini, Claudia
+Mengoni, Serena Manara, Paolo Manghi, Qiyun Zhu, et al. 2020. “Precise
+Phylogenetic Analysis of Microbial Isolates and Genomes from Metagenomes
+Using PhyloPhlAn 3.0.” *Nature Communications* 11 (1): 2500.
+<https://doi.org/10.1038/s41467-020-16366-7>.
+
+</div>
+
 <div id="ref-Bowers2017" class="csl-entry">
 
 Bowers, Robert M, Nikos C Kyrpides, Ramunas Stepanauskas, Miranda
@@ -99,11 +229,29 @@ Biotechnology* 35 (8): 725–31.
 
 </div>
 
+<div id="ref-Chaumeil2020" class="csl-entry">
+
+Chaumeil, Pierre-Alain, Aaron J Mussig, Philip Hugenholtz, and Donovan H
+Parks. 2020. “GTDB-Tk: A Toolkit to Classify Genomes with the Genome
+Taxonomy Database.” *Bioinformatics* 36 (6): 1925–27.
+<https://doi.org/10.1093/bioinformatics/btz848>.
+
+</div>
+
 <div id="ref-Chen2020" class="csl-entry">
 
 Chen, Lin-Xing, Karthik Anantharaman, Alon Shaiber, A Murat Eren, and
 Jillian F Banfield. 2020. “Accurate and Complete Genomes from
 Metagenomes.” *Genome Research* 30 (3): 315–33.
+
+</div>
+
+<div id="ref-Chklovski2023" class="csl-entry">
+
+Chklovski, Alex, Donovan H. Parks, Ben J. Woodcroft, and Gene W. Tyson.
+2023. “CheckM2: A Rapid, Scalable and Accurate Tool for Assessing
+Microbial Genome Quality Using Machine Learning.” *Nature Methods* 20
+(8): 1203–12. <https://doi.org/10.1038/s41592-023-01940-w>.
 
 </div>
 
@@ -116,12 +264,42 @@ Advanced Analysis and Visualization Platform for ‘Omics Data.” *PeerJ*
 
 </div>
 
+<div id="ref-FellowsYates2021" class="csl-entry">
+
+Fellows Yates, James A., Irina M. Velsko, Franziska Aron, Cosimo Posth,
+Courtney A. Hofman, Rita M. Austin, Cody E. Parker, et al. 2021. “The
+Evolution and Changing Ecology of the African Hominid Oral Microbiome.”
+*Proceedings of the National Academy of Sciences of the United States of
+America* 118 (20): e2021655118.
+<https://doi.org/10.1073/pnas.2021655118>.
+
+</div>
+
 <div id="ref-Kang2019" class="csl-entry">
 
 Kang, Dongwan D, Feng Li, Edward Kirton, Ashleigh Thomas, Rob Egan, Hong
 An, and Zhong Wang. 2019. “MetaBAT 2: An Adaptive Binning Algorithm for
 Robust and Efficient Genome Reconstruction from Metagenome Assemblies.”
 *PeerJ* 7: e7359.
+
+</div>
+
+<div id="ref-Klapper2023" class="csl-entry">
+
+Klapper, Martin, Alexander Hübner, Anan Ibrahim, Ina Wasmuth, Maxime
+Borry, Veit G. Haensch, Shuaibing Zhang, et al. 2023. “Natural Products
+from Reconstructed Bacterial Genomes of the Middle and Upper
+Paleolithic.” *Science* 380 (6645): 619–24.
+<https://doi.org/10.1126/science.adf5300>.
+
+</div>
+
+<div id="ref-Mirdita2021" class="csl-entry">
+
+Mirdita, M, M Steinegger, F Breitwieser, J Söding, and E Levy Karin.
+2021. “Fast and Sensitive Taxonomic Assignment to Metagenomic Contigs.”
+*Bioinformatics* 37 (18): 3029–31.
+<https://doi.org/10.1093/bioinformatics/btab184>.
 
 </div>
 
@@ -160,6 +338,17 @@ Metagenomes.” *Genome Research* 25 (7): 1043–55.
 
 </div>
 
+<div id="ref-Pasolli2019" class="csl-entry">
+
+Pasolli, Edoardo, Francesco Asnicar, Serena Manara, Moreno Zolfo,
+Nicolai Karcher, Federica Armanini, Francesco Beghini, et al. 2019.
+“Extensive Unexplored Human Microbiome Diversity Revealed by Over
+150,000 Genomes from Metagenomes Spanning Age, Geography, and
+Lifestyle.” *Cell* 176 (3): 649–662.e20.
+<https://doi.org/10.1016/j.cell.2019.01.001>.
+
+</div>
+
 <div id="ref-Saheb2021" class="csl-entry">
 
 Saheb Kashaf, Sara, Diana M Proctor, Clay Deming, Paul Saary, Martin
@@ -167,6 +356,16 @@ Hölzer, Monica E Taylor, Heidi H Kong, Julia A Segre, Alexandre Almeida,
 and Robert D Finn. 2021. “Integrating Cultivation and Metagenomics for a
 Multi-Kingdom View of Skin Microbiome Diversity and Functions.” *Nature
 Microbiology*, 1–11.
+
+</div>
+
+<div id="ref-Schwengers2021" class="csl-entry">
+
+Schwengers, Oliver, Lukas Jelonek, Marius Alfred Dieckmann, Sebastian
+Beyvers, Jochen Blom, and AlexanderYR 2021 Goesmann. n.d. “Bakta: Rapid
+and Standardized Annotation of Bacterial Genomes via Alignment-Free
+Sequence Identification.” *Microbial Genomics* 7 (11): 000685. Accessed
+November 22, 2022. <https://doi.org/10.1099/mgen.0.000685>.
 
 </div>
 
