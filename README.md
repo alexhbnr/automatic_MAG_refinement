@@ -109,6 +109,12 @@ wget -O automatic_MAG_refinement.zip https://github.com/alexhbnr/automatic_MAG_r
 unzip automatic_MAG_refinement.zip
 ```
 
+Afterwards, we can change into pipeline directory:
+
+``` bash
+cd automatic_MAG_refinement
+```
+
 Finally, the configuration file and sample table have to be provided.
 Templates for these can be found in `config/config.yaml` for the
 configuration file and in `test/samples.tsv` for the sample table.
@@ -119,10 +125,10 @@ Yates et al. (2021) and later *de novo* assembled in Klapper et al.
 (2023):
 
 ``` bash
-wget -O test/FUM003-megahit.fasta.gz https://share.eva.mpg.de/index.php/s/nQ7Df5Z4T2EFQrA
-wget -O test/FUM003.sorted.dedup.bam https://share.eva.mpg.de/index.php/s/fbQNLGs74AGit6J
-wget -O test/FUM003.sorted.dedup.bam.bai https://share.eva.mpg.de/index.php/s/B2nMAWLZCw5kK6y
-wget -O test/metawrap_50_10_bins.stats https://share.eva.mpg.de/index.php/s/dkqeA2fNMksdqsk
+wget -O test/FUM003-megahit.fasta.gz https://share.eva.mpg.de/index.php/s/nQ7Df5Z4T2EFQrA/download/FUM003-megahit.fasta.gz
+wget -O test/FUM003.sorted.dedup.bam https://share.eva.mpg.de/index.php/s/fbQNLGs74AGit6J/download/FUM003.sorted.dedup.bam
+wget -O test/FUM003.sorted.dedup.bam.bai https://share.eva.mpg.de/index.php/s/B2nMAWLZCw5kK6y/download/FUM003.sorted.dedup.bam.bai
+wget -O test/metawrap_50_10_bins.stats https://share.eva.mpg.de/index.php/s/dkqeA2fNMksdqsk/download/metawrap_50_10_bins.stats
 ```
 
 To start the pipeline, we run
