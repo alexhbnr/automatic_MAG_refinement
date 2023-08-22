@@ -111,7 +111,7 @@ rule gtdbtk_download_db:
         wget -O {params.tarball} {params.url} && \
         tar -xvzf {params.tarball} -C '{params.gtdbtk_dir}' --strip 1 > /dev/null && \
         rm {params.tarball} &&  \
-        conda env config vars set GTDBTK_DATA_PATH='{gtdbtk_dir}'
+        conda env config vars set GTDBTK_DATA_PATH='{params.gtdbtk_dir}'
         """
 
 ################################################################################
