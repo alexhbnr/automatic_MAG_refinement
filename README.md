@@ -40,7 +40,7 @@ contigs are removed because they are likely chimeric when:
     E.g. the main lineage was
     `d_Bacteria;p_Firmicutes A;c_Clostridia;o_Lachnospirales;f_Lachnospiraceae`
     but a contig was assigned to
-    `d_Bacteria;p_Firmicutes A;c_Clostridia;o_Peptostreptococcales;f_Filifactoraceae;g_Peptoanaerobacter;s_Peptoanaerobacter stomatis`.
+    `d_Bacteria;p_Firmicutes_A;c_Clostridia;o_Peptostreptococcales;f_Filifactoraceae;g_Peptoanaerobacter;s_Peptoanaerobacter_stomatis`.
 2.  A contig could only be assigned to the taxomic rank kingdom and
     phylum and the per-gene analysis revealed that genes on this contig
     can be assigned to a lineage other than the main lineage.
@@ -55,20 +55,17 @@ refined MAGs:
 1.  Functional annotation using Bakta (Schwengers et al. 2022)
 2.  Evaluation of the quality of the MAG using
 
-<!-- -->
-
-    - checkM [@Parks2015]
-    - checkM2 [@Chklovski2023]
-    - GUNC [@Orakov2021]
-    - the presence of alternative alleles with a minimal allele frequency of 20% within coding
-      sequences that would lead to a non-synonymous mutation [@Pasolli2019]
+- checkM (Parks et al. 2015)
+- checkM2 (Chklovski et al. 2023)
+- GUNC (Orakov et al. 2021)
+- the presence of alternative alleles with a minimal allele frequency of
+  20% within coding sequences that would lead to a non-synonymous
+  mutation (Pasolli et al. 2019)
 
 3.  Taxonomic assignment using
 
-<!-- -->
-
-    - GTDBTK [@Chaumeil2020]
-    - PhyloPhlAn [@Asnicar2020]
+- GTDBTK (Chaumeil et al. 2020)
+- PhyloPhlAn (Asnicar et al. 2020)
 
 A detailed description of the methodology and some results can be found
 in the [Supplementary
@@ -218,6 +215,16 @@ Coverage and Composition.” *arXiv Preprint arXiv:1312.4038*.
 
 </div>
 
+<div id="ref-Asnicar2020" class="csl-entry">
+
+Asnicar, Francesco, Andrew Maltez Thomas, Francesco Beghini, Claudia
+Mengoni, Serena Manara, Paolo Manghi, Qiyun Zhu, et al. 2020. “Precise
+Phylogenetic Analysis of Microbial Isolates and Genomes from Metagenomes
+Using PhyloPhlAn 3.0.” *Nature Communications* 11 (1): 2500.
+<https://doi.org/10.1038/s41467-020-16366-7>.
+
+</div>
+
 <div id="ref-Bowers2017" class="csl-entry">
 
 Bowers, Robert M, Nikos C Kyrpides, Ramunas Stepanauskas, Miranda
@@ -228,11 +235,29 @@ Biotechnology* 35 (8): 725–31.
 
 </div>
 
+<div id="ref-Chaumeil2020" class="csl-entry">
+
+Chaumeil, Pierre-Alain, Aaron J Mussig, Philip Hugenholtz, and Donovan H
+Parks. 2020. “GTDB-Tk: A Toolkit to Classify Genomes with the Genome
+Taxonomy Database.” *Bioinformatics* 36 (6): 1925–27.
+<https://doi.org/10.1093/bioinformatics/btz848>.
+
+</div>
+
 <div id="ref-Chen2020" class="csl-entry">
 
 Chen, Lin-Xing, Karthik Anantharaman, Alon Shaiber, A Murat Eren, and
 Jillian F Banfield. 2020. “Accurate and Complete Genomes from
 Metagenomes.” *Genome Research* 30 (3): 315–33.
+
+</div>
+
+<div id="ref-Chklovski2023" class="csl-entry">
+
+Chklovski, Alex, Donovan H. Parks, Ben J. Woodcroft, and Gene W. Tyson.
+2023. “CheckM2: A Rapid, Scalable and Accurate Tool for Assessing
+Microbial Genome Quality Using Machine Learning.” *Nature Methods* 20
+(8): 1203–12. <https://doi.org/10.1038/s41592-023-01940-w>.
 
 </div>
 
@@ -316,6 +341,17 @@ Parks, Donovan H, Michael Imelfort, Connor T Skennerton, Philip
 Hugenholtz, and Gene W Tyson. 2015. “CheckM: Assessing the Quality of
 Microbial Genomes Recovered from Isolates, Single Cells, and
 Metagenomes.” *Genome Research* 25 (7): 1043–55.
+
+</div>
+
+<div id="ref-Pasolli2019" class="csl-entry">
+
+Pasolli, Edoardo, Francesco Asnicar, Serena Manara, Moreno Zolfo,
+Nicolai Karcher, Federica Armanini, Francesco Beghini, et al. 2019.
+“Extensive Unexplored Human Microbiome Diversity Revealed by Over
+150,000 Genomes from Metagenomes Spanning Age, Geography, and
+Lifestyle.” *Cell* 176 (3): 649–662.e20.
+<https://doi.org/10.1016/j.cell.2019.01.001>.
 
 </div>
 
