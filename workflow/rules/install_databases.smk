@@ -3,7 +3,7 @@
 rule install_dbs:
     input:
         mmseqs2_gtdb = "{resourcesdir}/mmseqs2/gtdb/mmseqs2_gtdb_r207_db_mapping",
-        checkm_db = "{resourcesdir}/checkM/setRoot.done",
+        checkm_db = "{resourcesdir}/checkM/.dmanifest",
         gunc_db = "{resourcesdir}/GUNC/db",
         checkm2_db = "{resourcesdir}/checkm2/CheckM2_database/uniref100.KO.1.dmnd",
         bakta = "{resourcesdir}/bakta/downloaded"
@@ -42,20 +42,6 @@ rule checkM_prepareDatabase:
         cd {params.outdir}
         wget {params.url}
         tar xvf checkm_data_2015_01_16.tar.gz
-        """
-
-rule checkM_setRoot:
-    input:
-        "{resourcesdir}/checkM/.dmanifest"
-    output:
-        touch("{resourcesdir}/checkM/setRoot.done")
-    message: "Specify the database folder in checkM"
-    container: "https://depot.galaxyproject.org/singularity/checkm-genome:1.2.2--pyhdfd78af_1"
-    params:
-        dbdir = "{resourcesdir}/checkM"
-    shell:
-        """
-        echo {params.dbdir} | checkm data setRoot {params.dbdir}
         """
 
 rule install_checkm2_database:

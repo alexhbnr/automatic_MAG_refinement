@@ -62,7 +62,8 @@ rule gunc_run:
 
 rule checkM_lineage_wf:
     input:
-        lambda wildcards: return_bins_of_sample(wildcards)
+        fas = lambda wildcards: return_bins_of_sample(wildcards),
+        db = "{resourcesdir}/checkM/.dmanifest"
     output:
         "{tmpdir}/checkM/{sample}/storage/marker_gene_stats.tsv"
     message: "Run checkM using lineage-specific workflow on sample {wildcards.sample}"
@@ -71,19 +72,20 @@ rule checkM_lineage_wf:
         mem = 80,
         cores = 8
     params:
+        dbdir = "{resourcesdir}/checkM",
         fadir = "{tmpdir}/fastas/{sample}",
         outputfd = "{tmpdir}/checkM/{sample}"
     log: "{tmpdir}/checkM/{sample}.checkM.log"
     threads: 8
     shell:
         """
-        rm -r {params.outputfd}    
+        rm -r {params.outputfd}
+        export CHECKM_DATA_PATH={params.dbdir} && \
         checkm lineage_wf \
             -x fa \
             -t {threads} \
             {params.fadir} \
             {params.outputfd} > {log}
-
         """
 
 rule checkM_qa:
