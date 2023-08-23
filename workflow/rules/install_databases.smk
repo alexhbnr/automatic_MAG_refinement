@@ -71,7 +71,7 @@ rule download_bakta_db:
     output:
         touch("{resourcesdir}/bakta/downloaded")
     message: "Download and prepare the reference DB for Bakta"
-    container: "/mnt/archgen/tools/singularity/containers/depot.galaxyproject.org-singularity-bakta-1.7.0--pyhdfd78af_0.img"
+    container: "docker://quay.io/biocontainers/bakta:1.8.1--pyhdfd78af_0"
     resources:
         mem = 4,
         cores = 1

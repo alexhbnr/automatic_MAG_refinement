@@ -32,7 +32,7 @@ rule bakta:
     output:
         "{resultdir}/{bin}/{bin}.gff3.gz"
     message: "Annotate contigs using BAKTA: {wildcards.bin}"
-    container: "/mnt/archgen/tools/singularity/containers/depot.galaxyproject.org-singularity-bakta-1.7.0--pyhdfd78af_0.img"
+    container: "docker://quay.io/biocontainers/bakta:1.8.1--pyhdfd78af_0"
     resources:
         mem = 128,
         cores = 8
