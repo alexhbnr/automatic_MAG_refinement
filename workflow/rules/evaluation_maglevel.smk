@@ -46,6 +46,7 @@ rule bakta:
         """
         bakta -p {params.prefix} \
             --db {params.dbdir} \
+            --force \
             --output {params.outdir} \
             {params.extra} \
             --threads {threads} \
