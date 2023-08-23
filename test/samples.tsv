@@ -1,0 +1,2 @@
+sample	fastafn	bamfn	metawrapreport
+FUM003-megahit	test/FUM003-megahit.fasta.gz	test/FUM003.sorted.dedup.bam	test/FUM003-megahit/metawrap_50_10_bins.stats
