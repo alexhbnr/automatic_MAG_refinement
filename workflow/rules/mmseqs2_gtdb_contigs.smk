@@ -30,6 +30,7 @@ rule concat_bins:
     output:
         temp("{tmpdir}/mmseqs2/concat/all_contigs.fasta")
     message: "Concatenate all contigs that were binned into a single FastA"
+    priority: 100
     resources:
         mem = 4,
         cores = 1
@@ -50,6 +51,7 @@ rule createdb_bins:
         "{tmpdir}/mmseqs2/concat/all_contigs.contigs"
     message: "Create database of contigs"
     container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
+    priority: 100
     resources:
         mem = 16,
         cores = 1
@@ -64,6 +66,7 @@ rule screen:
         "{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb.index"
     message: "Assign taxonomy via the GTDB for contigs"
     container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
+    priority: 100
     resources:
         mem = 750,
         cores = 24
@@ -98,9 +101,10 @@ rule create_tsv:
         contigs = "{tmpdir}/mmseqs2/concat/all_contigs.contigs",
         assignments = "{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb.index"
     output:
-        pipe("{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb.tsv")
+        temp("{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb.tsv")
     message: "Convert MMSeqs2 GTDB results to TSV"
     container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
+    priority: 100
     resources:
         mem = 8,
         cores = 1
@@ -121,6 +125,7 @@ rule mmseqs2_annotatetsv:
     output:
         "{tmpdir}/mmseqs2/concat/all_contigs.mmseqs2_gtdb.annot.tsv"
     message: "Add header to MMSeqs2 table"
+    priority: 100
     script:
         "../scripts/mmseqs2_annotatetsv.py"
 
@@ -130,6 +135,7 @@ rule mmseqs2_splittsv:
     output:
         touch("{tmpdir}/mmseqs2/mmseqs2_splittsv.done")
     message: "Split MMSeqs2 result table into bins"
+    priority: 100
     params:
         sampletsv = config['sampletsv'],
         dir = "{tmpdir}/mmseqs2"
