@@ -159,7 +159,7 @@ rule mmseqs2_splittsv:
             contigs = pd.read_csv(sampletsv.at[sample, 'metawrapreport'].replace(".stats", ".contigs"),
                                 sep="\t", header=None, names=['contig', 'bin'], index_col=['bin'])
             for b in sample_bins.index:
-                c = contigs.loc[sample_bins.at[b, 'bin']]['contig'].tolist()
+                c = contigs.loc[[sample_bins.at[b, 'bin']]]['contig'].tolist()
                 mmseqs2.loc[(mmseqs2['sample'] == sample) & (mmseqs2['contig'].isin(c))] \
                     .drop(['sample'], axis=1) \
                     .to_csv(f"{params.dir}/{b}.mmseqs2_gtdb.annot.tsv", sep="\t", index=False)
