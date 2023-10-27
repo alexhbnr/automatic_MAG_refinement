@@ -1,13 +1,16 @@
 localrules: decompress_bins
 
 def return_bins_for_taxprofiling(wildcards):
+    with open(checkpoints.mmseqs2_gtdb_genes.get(**wildcards).output[0], "rt") as dummyfile:
+        pass
     bins = []
     for sample in SAMPLES:
         metawrap = pd.read_csv(sampletsv.at[sample, 'metawrapreport'],
                             sep="\t")
         metawrap['binid'] = metawrap['bin'].str.extract(r'bin.([0-9]+)$').astype(int)
         metawrap['sample_binID'] = [f"{sample}_{i:03}" for i in metawrap['binid']]
-        bins.extend(metawrap['sample_binID'].tolist())
+        bins.extend([b for b in metawrap['sample_binID'].tolist()
+                     if os.stat(f"{config['resultdir']}/{b}/{b}.fasta.gz").st_size > 50])
     return [f"{config['tmpdir']}/taxprofiling_fas/{b}.fa" for b in bins]
 
 rule taxprofiling:

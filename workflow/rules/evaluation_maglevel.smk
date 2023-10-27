@@ -1,11 +1,14 @@
 def return_bins_of_cmseq(wildcards):
+    with open(checkpoints.mmseqs2_gtdb_genes.get(**wildcards).output[0], "rt") as dummyfile:
+        pass
     bins = []
     for sample in SAMPLES:
         metawrap = pd.read_csv(sampletsv.at[sample, 'metawrapreport'],
                             sep="\t")
         metawrap['binid'] = metawrap['bin'].str.extract(r'bin.([0-9]+)$').astype(int)
         metawrap['sample_binID'] = [f"{sample}_{i:03}" for i in metawrap['binid']]
-        bins.extend(metawrap['sample_binID'].tolist())
+        bins.extend([b for b in metawrap['sample_binID'].tolist()
+                     if os.stat(f"{config['resultdir']}/{b}/{b}.fasta.gz").st_size > 50])
     return [f"{config['resultdir']}/{b}/{b}.{analysis}.txt" for b in bins for analysis in ['breadth_depth', 'polymut']]
 
 def sampling_fraction(wildcards):
@@ -40,7 +43,7 @@ rule bakta:
         prefix = lambda wildcards: wildcards.bin,
         outdir = "{resultdir}/{bin}",
         dbdir = f"{config['resourcesdir']}/bakta/db",
-        extra = "--keep-contig-headers --meta"
+        extra = "--keep-contig-headers --meta --skip-crispr"
     threads: 8
     shell:
         """
@@ -72,7 +75,10 @@ checkpoint breadth_depth_filtered_contigs:
         cores = 1
     run:
         # Retained contigs
-        contigs = [name for name, _ in pyfastx.Fastx(input.fasta)]
+        if os.stat(input.fasta).st_size > 50:
+            contigs = [name for name, _ in pyfastx.Fastx(input.fasta)]
+        else:
+            contigs = []
         # Subset depth table
         pd.read_csv(input.depth, sep="\t") \
             .query('Contig.isin(@contigs)') \

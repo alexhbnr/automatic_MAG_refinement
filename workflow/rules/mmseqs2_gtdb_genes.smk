@@ -28,7 +28,7 @@ def return_filter_fasta_files(wildcards):
 
 ################################################################################
 
-rule mmseqs2_gtdb_genes:
+checkpoint mmseqs2_gtdb_genes:
     input:
         return_filter_fasta_files
     output:
@@ -159,11 +159,11 @@ rule create_tsv_kp_contigs:
         contigs = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_genes",
         assignments = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.index"
     output:
-        pipe("{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.tsv")
+        temp("{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes.tsv")
     message: "Convert MMSeqs2 GTDB results to TSV"
     container: "https://depot.galaxyproject.org/singularity/mmseqs2:14.7e284--pl5321hf1761c0_0"
     resources:
-        mem = 8,
+        mem = 16,
         cores = 1
     params:
         prefix = "{tmpdir}/mmseqs2_genes/kp_contigs.mmseqs2_gtdb_genes",
